@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel do motorista</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    background: #f4f5f7;
+    margin: 0;
+    padding: 24px 16px;
+    color: #1f2328;
+  }
+  .wrap { max-width: 900px; margin: 0 auto; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  p.subtitle { font-size: 14px; color: #6b7280; margin: 0 0 20px; }
+  .table-card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    overflow-x: auto;
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 640px; }
+  th {
+    text-align: left;
+    padding: 12px 14px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: #6b7280;
+    border-bottom: 1px solid #e5e7eb;
+    white-space: nowrap;
+  }
+  td { padding: 12px 14px; border-bottom: 1px solid #f0f1f3; white-space: nowrap; }
+  tr:last-child td { border-bottom: none; }
+  select.status-select {
+    padding: 6px 8px;
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .empty, .loading { padding: 40px; text-align: center; color: #6b7280; font-size: 14px; }
+  #toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    display: none;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+  .toast-ok { background: #ecfdf5; color: #047857; }
+  .toast-fail { background: #fef2f2; color: #b91c1c; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+    <div>
+      <h1>Minhas coletas</h1>
+      <p class="subtitle">Agendamentos atribuídos ao seu veículo.</p>
+    </div>
+    <button id="btn-sair" style="padding:8px 14px; border:1px solid #d1d5db; border-radius:8px; background:#fff; font-size:14px; cursor:pointer;">Sair</button>
+  </div>
+
+  <div class="table-card">
+    <div id="conteudo" class="loading">Carregando...</div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = "https://szdarwlcynzbamjodxsw.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_uiTPqOcdhAL5d0cBQorVgw_yIiismA-";
+
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  (async () => {
+    const { data } = await supabaseClient.auth.getSession();
+    if (!data.session) window.location.href = 'motorista-login.html';
+  })();
+
+  document.getElementById('btn-sair').addEventListener('click', async () => {
+    await supabaseClient.auth.signOut();
+    window.location.href = 'motorista-login.html';
+  });
+
+  // Logout automático por inatividade (20 minutos)
+  const TEMPO_LIMITE_MS = 20 * 60 * 1000;
+  let timeoutId;
+  async function logoutPorInatividade() {
+    await supabaseClient.auth.signOut();
+    window.location.href = 'motorista-login.html?motivo=inatividade';
+  }
+  function reiniciarContadorInatividade() {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(logoutPorInatividade, TEMPO_LIMITE_MS);
+  }
+  ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'click'].forEach(evento => {
+    document.addEventListener(evento, reiniciarContadorInatividade, { passive: true });
+  });
+  reiniciarContadorInatividade();
+
+  const conteudo = document.getElementById('conteudo');
+  const toast = document.getElementById('toast');
+
+  function mostrarToast(msg, ok) {
+    toast.textContent = msg;
+    toast.className = ok ? 'toast-ok' : 'toast-fail';
+    toast.style.display = 'block';
+    setTimeout(() => { toast.style.display = 'none'; }, 3000);
+  }
+
+  function formatarData(dataStr) {
+    if (!dataStr) return '-';
+    const [ano, mes, dia] = dataStr.split('-');
+    return `${dia}/${mes}/${ano}`;
+  }
+
+  function formatarCNPJ(cnpj) {
+    if (!cnpj || cnpj.length !== 14) return cnpj;
+    return cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
+  }
+
+  async function carregarAgendamentos() {
+    conteudo.className = 'loading';
+    conteudo.textContent = 'Carregando...';
+
+    // A RLS do Supabase já garante que só voltam agendamentos da placa deste motorista
+    const { data, error } = await supabaseClient
+      .from('agendamentos_coleta')
+      .select('*')
+      .order('data_coleta', { ascending: true });
+
+    if (error) {
+      conteudo.className = 'empty';
+      conteudo.textContent = 'Erro ao carregar agendamentos.';
+      console.error(error);
+      return;
+    }
+
+    if (!data || data.length === 0) {
+      conteudo.className = 'empty';
+      conteudo.textContent = 'Nenhuma coleta atribuída a você por enquanto.';
+      return;
+    }
+
+    renderizarTabela(data);
+  }
+
+  function renderizarTabela(rows) {
+    let html = `
+      <table>
+        <thead>
+          <tr>
+            <th>Data coleta</th>
+            <th>Empresa</th>
+            <th>CNPJ</th>
+            <th>Volumes</th>
+            <th>Peso (kg)</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+
+    for (const row of rows) {
+      html += `
+        <tr>
+          <td>${formatarData(row.data_coleta)}</td>
+          <td>${row.nome_empresa || '-'}</td>
+          <td>${formatarCNPJ(row.cnpj)}</td>
+          <td>${row.quantidade_volumes ?? '-'}</td>
+          <td>${row.peso_kg ?? '-'}</td>
+          <td>
+            <select class="status-select" data-id="${row.id}">
+              <option value="pendente" ${row.status === 'pendente' ? 'selected' : ''}>Pendente</option>
+              <option value="confirmado" ${row.status === 'confirmado' ? 'selected' : ''}>Confirmado</option>
+              <option value="coletado" ${row.status === 'coletado' ? 'selected' : ''}>Coletado</option>
+            </select>
+          </td>
+        </tr>
+      `;
+    }
+
+    html += '</tbody></table>';
+    conteudo.className = '';
+    conteudo.innerHTML = html;
+
+    document.querySelectorAll('.status-select').forEach(select => {
+      select.addEventListener('change', async (e) => {
+        const id = e.target.dataset.id;
+        const novoStatus = e.target.value;
+        e.target.disabled = true;
+
+        const { error } = await supabaseClient
+          .from('agendamentos_coleta')
+          .update({ status: novoStatus })
+          .eq('id', id);
+
+        e.target.disabled = false;
+
+        if (error) {
+          mostrarToast('Não foi possível atualizar o status.', false);
+          console.error(error);
+        } else {
+          mostrarToast('Status atualizado.', true);
+        }
+      });
+    });
+  }
+
+  carregarAgendamentos();
+</script>
+
+</body>
+</html>

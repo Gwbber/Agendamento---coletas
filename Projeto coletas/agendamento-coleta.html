@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agendamento de Coleta</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    background: #f4f5f7;
+    margin: 0;
+    padding: 24px 16px;
+    color: #1f2328;
+  }
+  .card {
+    max-width: 480px;
+    margin: 0 auto;
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 28px 24px 32px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+  h1 {
+    font-size: 20px;
+    margin: 0 0 4px;
+  }
+  p.subtitle {
+    font-size: 14px;
+    color: #6b7280;
+    margin: 0 0 24px;
+  }
+  label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    margin: 16px 0 6px;
+    color: #374151;
+  }
+  input {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 15px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    background: #fff;
+  }
+  input:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.15);
+  }
+  input[readonly] {
+    background: #f3f4f6;
+    color: #6b7280;
+  }
+  .hint {
+    font-size: 12px;
+    color: #9ca3af;
+    margin-top: 4px;
+  }
+  .error {
+    font-size: 12px;
+    color: #dc2626;
+    margin-top: 4px;
+    display: none;
+  }
+  .row2 {
+    display: flex;
+    gap: 12px;
+  }
+  .row2 > div {
+    flex: 1;
+  }
+  button {
+    width: 100%;
+    margin-top: 24px;
+    padding: 13px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #fff;
+    background: #2563eb;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  button:disabled {
+    background: #93b4f0;
+    cursor: not-allowed;
+  }
+  #status-msg {
+    margin-top: 16px;
+    font-size: 14px;
+    text-align: center;
+    display: none;
+    padding: 10px;
+    border-radius: 8px;
+  }
+  .status-ok { background: #ecfdf5; color: #047857; }
+  .status-fail { background: #fef2f2; color: #b91c1c; }
+  .spinner {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border: 2px solid #ffffff66;
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin-right: 6px;
+    vertical-align: -1px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <h1>Agendamento de coleta</h1>
+  <p class="subtitle">Preencha os dados abaixo para solicitar a coleta.</p>
+
+  <form id="form-agendamento">
+
+    <label for="data_coleta">Data para coleta</label>
+    <input type="date" id="data_coleta" required>
+    <div class="error" id="err-data_coleta">Selecione uma data.</div>
+
+    <label for="nome_solicitante">Nome do solicitante</label>
+    <input type="text" id="nome_solicitante" placeholder="Seu nome completo" required>
+    <div class="error" id="err-nome_solicitante">Informe o nome do solicitante.</div>
+
+    <label for="cnpj">CNPJ</label>
+    <input type="text" id="cnpj" placeholder="00.000.000/0000-00" maxlength="18" required>
+    <div class="hint" id="cnpj-hint"></div>
+    <div class="error" id="err-cnpj">Informe um CNPJ válido.</div>
+
+    <label for="nome_empresa">Nome da empresa</label>
+    <input type="text" id="nome_empresa" placeholder="Preenchido automaticamente" readonly>
+    <div class="error" id="err-nome_empresa">Nome da empresa não encontrado. Preencha manualmente.</div>
+
+    <div class="row2">
+      <div>
+        <label for="quantidade_volumes">Qtd. de volumes</label>
+        <input type="number" id="quantidade_volumes" min="1" step="1" required>
+        <div class="error" id="err-quantidade_volumes">Informe a quantidade.</div>
+      </div>
+      <div>
+        <label for="peso_kg">Peso (KG)</label>
+        <input type="number" id="peso_kg" min="0.1" step="0.1" required>
+        <div class="error" id="err-peso_kg">Informe o peso.</div>
+      </div>
+    </div>
+
+    <button type="submit" id="btn-submit">Agendar coleta</button>
+  </form>
+
+  <div id="status-msg"></div>
+
+  <div style="text-align:center; margin-top:20px;">
+    <a href="login.html" style="font-size:13px; color:#9ca3af; text-decoration:none;">Área da transportadora</a>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  // ==== CONFIGURAÇÃO ====
+  // Substitua pelos dados do seu projeto Supabase (Project Settings > API)
+  const SUPABASE_URL = "https://szdarwlcynzbamjodxsw.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_uiTPqOcdhAL5d0cBQorVgw_yIiismA-";
+  // =======================
+
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const form = document.getElementById('form-agendamento');
+  const cnpjInput = document.getElementById('cnpj');
+  const nomeEmpresaInput = document.getElementById('nome_empresa');
+  const cnpjHint = document.getElementById('cnpj-hint');
+  const btnSubmit = document.getElementById('btn-submit');
+  const statusMsg = document.getElementById('status-msg');
+
+  function limparCNPJ(v) {
+    return v.replace(/\D/g, '');
+  }
+
+  function formatarCNPJ(v) {
+    v = limparCNPJ(v).slice(0, 14);
+    v = v.replace(/^(\d{2})(\d)/, '$1.$2');
+    v = v.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
+    v = v.replace(/\.(\d{3})(\d)/, '.$1/$2');
+    v = v.replace(/(\d{4})(\d)/, '$1-$2');
+    return v;
+  }
+
+  cnpjInput.addEventListener('input', (e) => {
+    e.target.value = formatarCNPJ(e.target.value);
+    esconderErro('cnpj');
+  });
+
+  cnpjInput.addEventListener('blur', async () => {
+    const cnpjLimpo = limparCNPJ(cnpjInput.value);
+    if (cnpjLimpo.length !== 14) return;
+
+    cnpjHint.textContent = 'Buscando empresa...';
+    nomeEmpresaInput.value = '';
+    nomeEmpresaInput.readOnly = true;
+
+    try {
+      const resposta = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpjLimpo}`);
+      if (!resposta.ok) throw new Error('CNPJ não encontrado');
+      const dados = await resposta.json();
+      nomeEmpresaInput.value = dados.razao_social || '';
+      cnpjHint.textContent = 'Empresa encontrada automaticamente.';
+    } catch (err) {
+      cnpjHint.textContent = 'Não foi possível buscar automaticamente. Preencha o nome da empresa manualmente.';
+      nomeEmpresaInput.readOnly = false;
+    }
+  });
+
+  function mostrarErro(campo) {
+    document.getElementById(`err-${campo}`).style.display = 'block';
+  }
+  function esconderErro(campo) {
+    document.getElementById(`err-${campo}`).style.display = 'none';
+  }
+
+  function validar() {
+    let ok = true;
+
+    const dataColeta = document.getElementById('data_coleta').value;
+    if (!dataColeta) { mostrarErro('data_coleta'); ok = false; } else { esconderErro('data_coleta'); }
+
+    const nomeSolicitante = document.getElementById('nome_solicitante').value.trim();
+    if (!nomeSolicitante) { mostrarErro('nome_solicitante'); ok = false; } else { esconderErro('nome_solicitante'); }
+
+    const cnpjLimpo = limparCNPJ(cnpjInput.value);
+    if (cnpjLimpo.length !== 14) { mostrarErro('cnpj'); ok = false; } else { esconderErro('cnpj'); }
+
+    const nomeEmpresa = nomeEmpresaInput.value.trim();
+    if (!nomeEmpresa) { mostrarErro('nome_empresa'); ok = false; } else { esconderErro('nome_empresa'); }
+
+    const volumes = document.getElementById('quantidade_volumes').value;
+    if (!volumes || Number(volumes) <= 0) { mostrarErro('quantidade_volumes'); ok = false; } else { esconderErro('quantidade_volumes'); }
+
+    const peso = document.getElementById('peso_kg').value;
+    if (!peso || Number(peso) <= 0) { mostrarErro('peso_kg'); ok = false; } else { esconderErro('peso_kg'); }
+
+    return ok;
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    statusMsg.style.display = 'none';
+
+    if (!validar()) return;
+
+    btnSubmit.disabled = true;
+    btnSubmit.innerHTML = '<span class="spinner"></span>Enviando...';
+
+    const payload = {
+      data_coleta: document.getElementById('data_coleta').value,
+      nome_solicitante: document.getElementById('nome_solicitante').value.trim(),
+      cnpj: limparCNPJ(cnpjInput.value),
+      nome_empresa: nomeEmpresaInput.value.trim(),
+      quantidade_volumes: Number(document.getElementById('quantidade_volumes').value),
+      peso_kg: Number(document.getElementById('peso_kg').value)
+    };
+
+    const { error } = await supabaseClient.from('agendamentos_coleta').insert([payload]);
+
+    btnSubmit.disabled = false;
+    btnSubmit.textContent = 'Agendar coleta';
+
+    statusMsg.style.display = 'block';
+    if (error) {
+      statusMsg.className = 'status-fail';
+      statusMsg.textContent = 'Não foi possível enviar o agendamento. Tente novamente.';
+      console.error(error);
+    } else {
+      statusMsg.className = 'status-ok';
+      statusMsg.textContent = 'Coleta agendada com sucesso!';
+      form.reset();
+      nomeEmpresaInput.value = '';
+      cnpjHint.textContent = '';
+    }
+  });
+</script>
+
+</body>
+</html>
