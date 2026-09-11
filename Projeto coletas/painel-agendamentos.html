@@ -161,15 +161,13 @@
 <div id="modal-motorista" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); align-items:center; justify-content:center; z-index:50;">
   <div style="background:#fff; border-radius:12px; padding:24px; max-width:360px; width:90%;">
     <h3 style="margin:0 0 4px; font-size:17px;">Novo motorista</h3>
-    <p style="margin:0 0 16px; font-size:13px; color:#6b7280;">O e-mail deve ser o mesmo usado para criar o login dele em Authentication → Users no Supabase.</p>
+    <p style="margin:0 0 16px; font-size:13px; color:#6b7280;">Depois de cadastrado, o motorista cria a própria senha na área dele, usando a placa como identificação.</p>
     <label style="display:block; font-size:13px; font-weight:600; margin:10px 0 4px;">Nome</label>
     <input type="text" id="mot-nome" style="width:100%; padding:8px 10px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;">
     <label style="display:block; font-size:13px; font-weight:600; margin:10px 0 4px;">Telefone</label>
     <input type="text" id="mot-telefone" style="width:100%; padding:8px 10px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;">
     <label style="display:block; font-size:13px; font-weight:600; margin:10px 0 4px;">Placa do veículo</label>
     <input type="text" id="mot-placa" placeholder="ABC1D23" style="width:100%; padding:8px 10px; border:1px solid #d1d5db; border-radius:8px; font-size:14px; text-transform:uppercase;">
-    <label style="display:block; font-size:13px; font-weight:600; margin:10px 0 4px;">E-mail de login</label>
-    <input type="email" id="mot-email" style="width:100%; padding:8px 10px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;">
     <div id="mot-erro" style="display:none; color:#dc2626; font-size:12px; margin-top:8px;"></div>
     <div style="display:flex; gap:8px; margin-top:18px;">
       <button id="mot-cancelar" style="flex:1; padding:10px; border:1px solid #d1d5db; border-radius:8px; background:#fff; font-size:14px; cursor:pointer;">Cancelar</button>
@@ -248,7 +246,6 @@
     listaMotoristasDiv.innerHTML = listaMotoristas.map(m => `
       <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #f0f1f3; font-size:14px;">
         <span><strong>${m.placa}</strong> — ${m.nome}${m.telefone ? ' · ' + m.telefone : ''}</span>
-        <span style="color:#6b7280;">${m.email}</span>
       </div>
     `).join('');
   }
@@ -257,7 +254,6 @@
     document.getElementById('mot-nome').value = '';
     document.getElementById('mot-telefone').value = '';
     document.getElementById('mot-placa').value = '';
-    document.getElementById('mot-email').value = '';
     motErro.style.display = 'none';
     modalMotorista.style.display = 'flex';
   });
@@ -269,21 +265,23 @@
   document.getElementById('mot-salvar').addEventListener('click', async () => {
     const nome = document.getElementById('mot-nome').value.trim();
     const telefone = document.getElementById('mot-telefone').value.trim();
-    const placa = document.getElementById('mot-placa').value.trim().toUpperCase();
-    const email = document.getElementById('mot-email').value.trim();
+    const placa = document.getElementById('mot-placa').value.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
 
-    if (!nome || !placa || !email) {
-      motErro.textContent = 'Preencha ao menos nome, placa e e-mail.';
+    if (!nome || !placa) {
+      motErro.textContent = 'Preencha ao menos nome e placa.';
       motErro.style.display = 'block';
       return;
     }
 
+    // E-mail interno gerado a partir da placa, usado só para o login do motorista
+    const emailInterno = `${placa.toLowerCase()}@motorista.coletas.app`;
+
     const { error } = await supabaseClient
       .from('motoristas')
-      .insert([{ nome, telefone, placa, email }]);
+      .insert([{ nome, telefone, placa, email: emailInterno }]);
 
     if (error) {
-      motErro.textContent = 'Não foi possível salvar. Verifique se a placa ou e-mail já não estão cadastrados.';
+      motErro.textContent = 'Não foi possível salvar. Verifique se essa placa já não está cadastrada.';
       motErro.style.display = 'block';
       console.error(error);
       return;
