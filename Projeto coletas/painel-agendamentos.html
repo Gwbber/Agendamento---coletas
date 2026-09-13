@@ -13,9 +13,64 @@
     padding: 24px 16px;
     color: #1f2328;
   }
-  .wrap {
-    max-width: 1100px;
+  .wrap { max-width: 1100px; flex: 1 1 600px; }
+  .layout {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    max-width: 1400px;
     margin: 0 auto;
+    flex-wrap: wrap;
+  }
+  .resumo-card {
+    width: 280px;
+    flex-shrink: 0;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    padding: 18px;
+    position: sticky;
+    top: 20px;
+  }
+  .resumo-card h2 {
+    font-size: 15px;
+    margin: 0 0 2px;
+  }
+  .resumo-data {
+    font-size: 13px;
+    color: #6b7280;
+    margin: 0 0 16px;
+  }
+  .resumo-total-geral {
+    display: flex;
+    justify-content: space-between;
+    background: #f9fafb;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 14px;
+    font-size: 13px;
+  }
+  .resumo-total-geral strong { display: block; font-size: 15px; }
+  .resumo-placa {
+    border-top: 1px solid #f0f1f3;
+    padding: 10px 0;
+    font-size: 13px;
+  }
+  .resumo-placa:first-of-type { border-top: none; }
+  .resumo-placa .placa-nome {
+    font-weight: 700;
+    font-size: 13px;
+    margin-bottom: 2px;
+  }
+  .resumo-placa .motorista-nome {
+    color: #6b7280;
+    font-size: 12px;
+    margin-bottom: 6px;
+  }
+  .resumo-placa .linha {
+    display: flex;
+    justify-content: space-between;
+    color: #374151;
   }
   h1 {
     font-size: 22px;
@@ -117,6 +172,7 @@
 </head>
 <body>
 
+<div class="layout">
 <div class="wrap">
   <div style="display:flex; justify-content:space-between; align-items:flex-start;">
     <div>
@@ -162,6 +218,18 @@
   <div class="table-card">
     <div id="conteudo" class="loading">Carregando agendamentos...</div>
   </div>
+</div>
+
+<aside class="resumo-card">
+  <h2>Resumo do dia</h2>
+  <p class="resumo-data" id="resumo-data-label">—</p>
+  <div class="resumo-total-geral">
+    <div>Peso total<strong id="resumo-peso-total">0 kg</strong></div>
+    <div>Volumes<strong id="resumo-volumes-total">0</strong></div>
+    <div>Fornecedores<strong id="resumo-fornecedores-total">0</strong></div>
+  </div>
+  <div id="resumo-por-placa">Carregando...</div>
+</aside>
 </div>
 
 <div id="toast"></div>
@@ -342,6 +410,83 @@
     return cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
   }
 
+  // ==== RESUMO DO DIA POR PLACA ====
+  async function atualizarResumoDia() {
+    const dataFiltro = document.getElementById('filtro-data').value;
+    const dataRef = dataFiltro || new Date().toISOString().slice(0, 10);
+    document.getElementById('resumo-data-label').textContent = dataFiltro
+      ? formatarData(dataRef)
+      : `Hoje · ${formatarData(dataRef)}`;
+
+    const resumoPorPlacaDiv = document.getElementById('resumo-por-placa');
+
+    const { data, error } = await supabaseClient
+      .from('agendamentos_coleta')
+      .select('placa_veiculo, peso_kg, quantidade_volumes, nome_empresa')
+      .eq('data_coleta', dataRef);
+
+    if (error) {
+      resumoPorPlacaDiv.innerHTML = '<span style="color:#6b7280; font-size:13px;">Erro ao carregar resumo.</span>';
+      console.error(error);
+      return;
+    }
+
+    const linhas = data || [];
+
+    // Totais gerais do dia
+    let pesoTotal = 0, volumesTotal = 0;
+    const fornecedoresUnicos = new Set();
+    linhas.forEach(r => {
+      pesoTotal += Number(r.peso_kg) || 0;
+      volumesTotal += Number(r.quantidade_volumes) || 0;
+      if (r.nome_empresa) fornecedoresUnicos.add(r.nome_empresa);
+    });
+
+    document.getElementById('resumo-peso-total').textContent = `${pesoTotal.toLocaleString('pt-BR')} kg`;
+    document.getElementById('resumo-volumes-total').textContent = volumesTotal.toLocaleString('pt-BR');
+    document.getElementById('resumo-fornecedores-total').textContent = fornecedoresUnicos.size;
+
+    if (linhas.length === 0) {
+      resumoPorPlacaDiv.innerHTML = '<span style="color:#6b7280; font-size:13px;">Nenhuma coleta para esse dia.</span>';
+      return;
+    }
+
+    // Agrupa por placa
+    const grupos = {}; // placa (ou 'sem_placa') -> { peso, volumes, fornecedores:Set }
+    linhas.forEach(r => {
+      const chave = r.placa_veiculo || 'sem_placa';
+      if (!grupos[chave]) grupos[chave] = { peso: 0, volumes: 0, fornecedores: new Set() };
+      grupos[chave].peso += Number(r.peso_kg) || 0;
+      grupos[chave].volumes += Number(r.quantidade_volumes) || 0;
+      if (r.nome_empresa) grupos[chave].fornecedores.add(r.nome_empresa);
+    });
+
+    const nomeMotoristaPorPlaca = {};
+    listaMotoristas.forEach(m => { nomeMotoristaPorPlaca[m.placa] = m.nome; });
+
+    const chavesOrdenadas = Object.keys(grupos).sort((a, b) => {
+      if (a === 'sem_placa') return 1;
+      if (b === 'sem_placa') return -1;
+      return a.localeCompare(b);
+    });
+
+    resumoPorPlacaDiv.innerHTML = chavesOrdenadas.map(chave => {
+      const g = grupos[chave];
+      const titulo = chave === 'sem_placa' ? 'Sem motorista atribuído' : chave;
+      const motorista = chave !== 'sem_placa' && nomeMotoristaPorPlaca[chave] ? nomeMotoristaPorPlaca[chave] : '';
+      return `
+        <div class="resumo-placa">
+          <div class="placa-nome">${titulo}</div>
+          ${motorista ? `<div class="motorista-nome">${motorista}</div>` : ''}
+          <div class="linha"><span>Peso</span><span>${g.peso.toLocaleString('pt-BR')} kg</span></div>
+          <div class="linha"><span>Volumes</span><span>${g.volumes.toLocaleString('pt-BR')}</span></div>
+          <div class="linha"><span>Fornecedores</span><span>${g.fornecedores.size}</span></div>
+        </div>
+      `;
+    }).join('');
+  }
+  // ==================================
+
   async function carregarAgendamentos() {
     conteudo.className = 'loading';
     conteudo.textContent = 'Carregando agendamentos...';
@@ -479,10 +624,10 @@
     });
   }
 
-  btnAtualizar.addEventListener('click', carregarAgendamentos);
+  btnAtualizar.addEventListener('click', () => { carregarAgendamentos(); atualizarResumoDia(); });
   filtroStatus.addEventListener('change', carregarAgendamentos);
   document.getElementById('filtro-placa').addEventListener('change', carregarAgendamentos);
-  document.getElementById('filtro-data').addEventListener('change', carregarAgendamentos);
+  document.getElementById('filtro-data').addEventListener('change', () => { carregarAgendamentos(); atualizarResumoDia(); });
 
   document.getElementById('btn-limpar-filtros').addEventListener('click', () => {
     filtroStatus.value = '';
@@ -490,9 +635,13 @@
     document.getElementById('filtro-data').value = '';
     filtroBusca.value = '';
     carregarAgendamentos();
+    atualizarResumoDia();
   });
 
-  carregarMotoristas().then(carregarAgendamentos);
+  carregarMotoristas().then(() => {
+    carregarAgendamentos();
+    atualizarResumoDia();
+  });
 </script>
 
 </body>
