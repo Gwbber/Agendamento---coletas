@@ -221,12 +221,16 @@
 </div>
 
 <aside class="resumo-card">
-  <div id="cabecalho-resumo" style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-    <span id="seta-resumo" style="display:inline-block; transition:transform 0.15s; font-size:12px;">▶</span>
-    <h2 style="margin:0;">Resumo do dia</h2>
+  <div id="cabecalho-resumo" style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+    <span style="display:flex; align-items:center; gap:8px; cursor:pointer; flex:1;" id="toggle-resumo">
+      <span id="seta-resumo" style="display:inline-block; transition:transform 0.15s; font-size:12px;">▶</span>
+      <h2 style="margin:0;">Resumo do dia</h2>
+    </span>
+    <button id="btn-refresh-resumo" title="Atualizar resumo" style="border:1px solid #d1d5db; background:#fff; border-radius:6px; width:28px; height:28px; cursor:pointer; font-size:14px; line-height:1;">↻</button>
   </div>
   <div id="conteudo-resumo" style="display:none; margin-top:10px;">
-    <input type="date" id="resumo-filtro-data" style="width:100%; padding:8px 10px; border:1px solid #d1d5db; border-radius:8px; font-size:14px; margin-bottom:14px;">
+    <input type="date" id="resumo-filtro-data" style="width:100%; padding:8px 10px; border:1px solid #d1d5db; border-radius:8px; font-size:14px; margin-bottom:10px;">
+    <button id="btn-ver-detalhes" style="width:100%; padding:8px; border:1px solid #d1d5db; border-radius:8px; background:#fff; font-size:13px; cursor:pointer; margin-bottom:14px;">Ver detalhes do dia ↗</button>
     <div class="resumo-total-geral">
       <div>Peso total<strong id="resumo-peso-total">0 kg</strong></div>
       <div>Volumes<strong id="resumo-volumes-total">0</strong></div>
@@ -426,14 +430,28 @@
   }
 
   // ==== RESUMO DO DIA POR PLACA ====
-  const cabecalhoResumo = document.getElementById('cabecalho-resumo');
+  const toggleResumo = document.getElementById('toggle-resumo');
   const setaResumo = document.getElementById('seta-resumo');
   const conteudoResumo = document.getElementById('conteudo-resumo');
 
-  cabecalhoResumo.addEventListener('click', () => {
+  toggleResumo.addEventListener('click', () => {
     const aberto = conteudoResumo.style.display !== 'none';
     conteudoResumo.style.display = aberto ? 'none' : 'block';
     setaResumo.style.transform = aberto ? 'rotate(0deg)' : 'rotate(90deg)';
+  });
+
+  const btnRefreshResumo = document.getElementById('btn-refresh-resumo');
+  btnRefreshResumo.addEventListener('click', async (e) => {
+    e.stopPropagation();
+    btnRefreshResumo.style.transform = 'rotate(360deg)';
+    await carregarMotoristas();
+    await atualizarResumoDia();
+    setTimeout(() => { btnRefreshResumo.style.transform = ''; }, 300);
+  });
+
+  document.getElementById('btn-ver-detalhes').addEventListener('click', () => {
+    const dataRef = resumoFiltroData.value || hojeLocalISO();
+    window.open(`detalhes-dia.html?data=${dataRef}`, '_blank');
   });
 
   const resumoFiltroData = document.getElementById('resumo-filtro-data');
