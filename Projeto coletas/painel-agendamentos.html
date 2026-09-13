@@ -381,7 +381,7 @@
     }
 
     // E-mail interno gerado a partir da placa, usado só para o login do motorista
-    const emailInterno = `${placa.toLowerCase()}@motorista.coletas.app`;
+    const emailInterno = `${placa.toLowerCase()}@motorista.coletas.com`;
 
     const { error } = await supabaseClient
       .from('motoristas')
