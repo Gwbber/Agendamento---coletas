@@ -169,7 +169,10 @@
   const SUPABASE_ANON_KEY = "sb_publishable_uiTPqOcdhAL5d0cBQorVgw_yIiismA-";
   // =======================
 
-  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  // Página pública: nunca reaproveita sessão salva (evita enviar como usuário logado por engano)
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: { persistSession: false, autoRefreshToken: false }
+  });
 
   const form = document.getElementById('form-agendamento');
   const cnpjInput = document.getElementById('cnpj');
