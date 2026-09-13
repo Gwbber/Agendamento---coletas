@@ -229,8 +229,7 @@
     <button id="btn-refresh-resumo" title="Atualizar resumo" style="border:1px solid #d1d5db; background:#fff; border-radius:6px; width:28px; height:28px; cursor:pointer; font-size:14px; line-height:1;">↻</button>
   </div>
   <div id="conteudo-resumo" style="display:none; margin-top:10px;">
-    <input type="date" id="resumo-filtro-data" style="width:100%; padding:8px 10px; border:1px solid #d1d5db; border-radius:8px; font-size:14px; margin-bottom:10px;">
-    <button id="btn-ver-detalhes" style="width:100%; padding:8px; border:1px solid #d1d5db; border-radius:8px; background:#fff; font-size:13px; cursor:pointer; margin-bottom:14px;">Ver detalhes do dia ↗</button>
+    <input type="date" id="resumo-filtro-data" style="width:100%; padding:8px 10px; border:1px solid #d1d5db; border-radius:8px; font-size:14px; margin-bottom:14px;">
     <div class="resumo-total-geral">
       <div>Peso total<strong id="resumo-peso-total">0 kg</strong></div>
       <div>Volumes<strong id="resumo-volumes-total">0</strong></div>
@@ -449,11 +448,6 @@
     setTimeout(() => { btnRefreshResumo.style.transform = ''; }, 300);
   });
 
-  document.getElementById('btn-ver-detalhes').addEventListener('click', () => {
-    const dataRef = resumoFiltroData.value || hojeLocalISO();
-    window.open(`detalhes-dia.html?data=${dataRef}`, '_blank');
-  });
-
   const resumoFiltroData = document.getElementById('resumo-filtro-data');
 
   async function atualizarResumoDia() {
@@ -532,6 +526,7 @@
             <div class="linha"><span>Peso</span><span>${g.peso.toLocaleString('pt-BR')} kg</span></div>
             <div class="linha"><span>Volumes</span><span>${g.volumes.toLocaleString('pt-BR')}</span></div>
             <div class="linha"><span>Fornecedores</span><span>${g.fornecedores.size}</span></div>
+            <button class="btn-detalhe-placa" data-placa="${chave === 'sem_placa' ? '' : chave}" style="width:100%; margin-top:8px; padding:6px; border:1px solid #d1d5db; border-radius:6px; background:#fff; font-size:12px; cursor:pointer;">Ver detalhes ↗</button>
           </div>
         </div>
       `;
@@ -544,6 +539,18 @@
         const aberto = detalhe.style.display !== 'none';
         detalhe.style.display = aberto ? 'none' : 'block';
         seta.style.transform = aberto ? 'rotate(0deg)' : 'rotate(90deg)';
+      });
+    });
+
+    resumoPorPlacaDiv.querySelectorAll('.btn-detalhe-placa').forEach(botao => {
+      botao.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const placaClicada = botao.dataset.placa;
+        const dataRef = resumoFiltroData.value || hojeLocalISO();
+        const url = placaClicada
+          ? `detalhes-dia.html?data=${dataRef}&placa=${encodeURIComponent(placaClicada)}`
+          : `detalhes-dia.html?data=${dataRef}&placa=sem_placa`;
+        window.open(url, '_blank');
       });
     });
   }

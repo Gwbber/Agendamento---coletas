@@ -95,17 +95,32 @@
 
   const params = new URLSearchParams(window.location.search);
   const dataRef = params.get('data') || hojeLocalISO();
+  const placaRef = params.get('placa') || null; // 'sem_placa' = sem motorista atribuído; null = todas
 
-  document.getElementById('subtitulo-data').textContent = `Coletas de ${formatarDataExibicao(dataRef)}`;
+  if (placaRef && placaRef !== 'sem_placa') {
+    document.getElementById('subtitulo-data').textContent = `Coletas de ${formatarDataExibicao(dataRef)} — Placa ${placaRef}`;
+  } else if (placaRef === 'sem_placa') {
+    document.getElementById('subtitulo-data').textContent = `Coletas de ${formatarDataExibicao(dataRef)} — Sem motorista atribuído`;
+  } else {
+    document.getElementById('subtitulo-data').textContent = `Coletas de ${formatarDataExibicao(dataRef)}`;
+  }
 
   const conteudo = document.getElementById('conteudo');
 
   async function carregar() {
-    const { data: linhas, error } = await supabaseClient
+    let query = supabaseClient
       .from('agendamentos_coleta')
       .select('nome_empresa, quantidade_volumes, peso_kg, status, placa_veiculo')
       .eq('data_coleta', dataRef)
       .order('nome_empresa', { ascending: true });
+
+    if (placaRef === 'sem_placa') {
+      query = query.is('placa_veiculo', null);
+    } else if (placaRef) {
+      query = query.eq('placa_veiculo', placaRef);
+    }
+
+    const { data: linhas, error } = await query;
 
     if (error) {
       conteudo.className = 'empty';
@@ -116,7 +131,7 @@
 
     if (!linhas || linhas.length === 0) {
       conteudo.className = 'empty';
-      conteudo.textContent = 'Nenhuma coleta para esse dia.';
+      conteudo.textContent = 'Nenhuma coleta para esse dia' + (placaRef ? ' com essa placa.' : '.');
       return;
     }
 
@@ -128,7 +143,7 @@
         <thead>
           <tr>
             <th>Fornecedor</th>
-            <th>Placa</th>
+            ${placaRef ? '' : '<th>Placa</th>'}
             <th>Volumes</th>
             <th>Peso (kg)</th>
             <th>Status</th>
@@ -145,7 +160,7 @@
       html += `
         <tr>
           <td>${r.nome_empresa || '-'}</td>
-          <td>${r.placa_veiculo || '—'}</td>
+          ${placaRef ? '' : `<td>${r.placa_veiculo || '—'}</td>`}
           <td>${r.quantidade_volumes ?? '-'}</td>
           <td>${r.peso_kg ?? '-'}</td>
           <td><span class="badge st-${r.status}">${r.status}</span></td>
@@ -158,7 +173,7 @@
         <tfoot>
           <tr>
             <td>Total</td>
-            <td></td>
+            ${placaRef ? '' : '<td></td>'}
             <td>${volumesTotal.toLocaleString('pt-BR')}</td>
             <td>${pesoTotal.toLocaleString('pt-BR')} kg</td>
             <td>${fornecedoresUnicos.size} fornecedores</td>
