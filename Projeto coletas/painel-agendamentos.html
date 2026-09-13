@@ -486,20 +486,38 @@
       return a.localeCompare(b);
     });
 
-    resumoPorPlacaDiv.innerHTML = chavesOrdenadas.map(chave => {
+    resumoPorPlacaDiv.innerHTML = chavesOrdenadas.map((chave, i) => {
       const g = grupos[chave];
       const titulo = chave === 'sem_placa' ? 'Sem motorista atribuído' : chave;
       const motorista = chave !== 'sem_placa' && nomeMotoristaPorPlaca[chave] ? nomeMotoristaPorPlaca[chave] : '';
       return `
         <div class="resumo-placa">
-          <div class="placa-nome">${titulo}</div>
-          ${motorista ? `<div class="motorista-nome">${motorista}</div>` : ''}
-          <div class="linha"><span>Peso</span><span>${g.peso.toLocaleString('pt-BR')} kg</span></div>
-          <div class="linha"><span>Volumes</span><span>${g.volumes.toLocaleString('pt-BR')}</span></div>
-          <div class="linha"><span>Fornecedores</span><span>${g.fornecedores.size}</span></div>
+          <div class="placa-cabecalho" data-idx="${i}" style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;">
+            <span style="display:flex; align-items:center; gap:6px;">
+              <span class="seta-placa" style="display:inline-block; transition:transform 0.15s; font-size:10px;">▶</span>
+              <span class="placa-nome" style="margin:0;">${titulo}</span>
+            </span>
+            <span style="color:#9ca3af; font-size:12px;">${g.peso.toLocaleString('pt-BR')} kg · ${g.volumes.toLocaleString('pt-BR')} vol.</span>
+          </div>
+          <div class="placa-detalhe" style="display:none; margin-top:6px;">
+            ${motorista ? `<div class="motorista-nome">${motorista}</div>` : ''}
+            <div class="linha"><span>Peso</span><span>${g.peso.toLocaleString('pt-BR')} kg</span></div>
+            <div class="linha"><span>Volumes</span><span>${g.volumes.toLocaleString('pt-BR')}</span></div>
+            <div class="linha"><span>Fornecedores</span><span>${g.fornecedores.size}</span></div>
+          </div>
         </div>
       `;
     }).join('');
+
+    resumoPorPlacaDiv.querySelectorAll('.placa-cabecalho').forEach(cabecalho => {
+      cabecalho.addEventListener('click', () => {
+        const detalhe = cabecalho.nextElementSibling;
+        const seta = cabecalho.querySelector('.seta-placa');
+        const aberto = detalhe.style.display !== 'none';
+        detalhe.style.display = aberto ? 'none' : 'block';
+        seta.style.transform = aberto ? 'rotate(0deg)' : 'rotate(90deg)';
+      });
+    });
   }
   // ==================================
 
