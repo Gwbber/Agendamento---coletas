@@ -222,7 +222,7 @@
 
 <aside class="resumo-card">
   <h2>Resumo do dia</h2>
-  <p class="resumo-data" id="resumo-data-label">—</p>
+  <input type="date" id="resumo-filtro-data" style="width:100%; padding:8px 10px; border:1px solid #d1d5db; border-radius:8px; font-size:14px; margin:8px 0 14px;">
   <div class="resumo-total-geral">
     <div>Peso total<strong id="resumo-peso-total">0 kg</strong></div>
     <div>Volumes<strong id="resumo-volumes-total">0</strong></div>
@@ -411,12 +411,13 @@
   }
 
   // ==== RESUMO DO DIA POR PLACA ====
+  const resumoFiltroData = document.getElementById('resumo-filtro-data');
+
   async function atualizarResumoDia() {
-    const dataFiltro = document.getElementById('filtro-data').value;
-    const dataRef = dataFiltro || new Date().toISOString().slice(0, 10);
-    document.getElementById('resumo-data-label').textContent = dataFiltro
-      ? formatarData(dataRef)
-      : `Hoje · ${formatarData(dataRef)}`;
+    if (!resumoFiltroData.value) {
+      resumoFiltroData.value = new Date().toISOString().slice(0, 10);
+    }
+    const dataRef = resumoFiltroData.value;
 
     const resumoPorPlacaDiv = document.getElementById('resumo-por-placa');
 
@@ -624,10 +625,11 @@
     });
   }
 
-  btnAtualizar.addEventListener('click', () => { carregarAgendamentos(); atualizarResumoDia(); });
+  btnAtualizar.addEventListener('click', carregarAgendamentos);
   filtroStatus.addEventListener('change', carregarAgendamentos);
   document.getElementById('filtro-placa').addEventListener('change', carregarAgendamentos);
-  document.getElementById('filtro-data').addEventListener('change', () => { carregarAgendamentos(); atualizarResumoDia(); });
+  document.getElementById('filtro-data').addEventListener('change', carregarAgendamentos);
+  resumoFiltroData.addEventListener('change', atualizarResumoDia);
 
   document.getElementById('btn-limpar-filtros').addEventListener('click', () => {
     filtroStatus.value = '';
@@ -635,7 +637,6 @@
     document.getElementById('filtro-data').value = '';
     filtroBusca.value = '';
     carregarAgendamentos();
-    atualizarResumoDia();
   });
 
   carregarMotoristas().then(() => {
