@@ -266,6 +266,16 @@
 
   const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+  // Retorna a data de hoje no formato YYYY-MM-DD, usando o horário local do navegador
+  // (evita o bug de toISOString(), que usa UTC e pode "adiantar" o dia perto da meia-noite)
+  function hojeLocalISO() {
+    const d = new Date();
+    const ano = d.getFullYear();
+    const mes = String(d.getMonth() + 1).padStart(2, '0');
+    const dia = String(d.getDate()).padStart(2, '0');
+    return `${ano}-${mes}-${dia}`;
+  }
+
   // Protege a página: só continua se estiver logado
   (async () => {
     const { data } = await supabaseClient.auth.getSession();
@@ -430,7 +440,7 @@
 
   async function atualizarResumoDia() {
     if (!resumoFiltroData.value) {
-      resumoFiltroData.value = new Date().toISOString().slice(0, 10);
+      resumoFiltroData.value = hojeLocalISO();
     }
     const dataRef = resumoFiltroData.value;
 
