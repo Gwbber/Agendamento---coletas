@@ -587,6 +587,7 @@
             <div class="linha"><span>Volumes</span><span>${g.volumes.toLocaleString('pt-BR')}</span></div>
             <div class="linha"><span>Fornecedores</span><span>${g.fornecedores.size}</span></div>
             <button class="btn-detalhe-placa" data-placa="${chave === 'sem_placa' ? '' : chave}" style="width:100%; margin-top:8px; padding:6px; border:1px solid #d1d5db; border-radius:6px; background:#fff; font-size:12px; cursor:pointer;">Ver detalhes ↗</button>
+            ${chave !== 'sem_placa' ? `<button class="btn-finalizar-placa" data-placa="${chave}" style="width:100%; margin-top:6px; padding:6px; border:1px solid #16a34a; color:#16a34a; border-radius:6px; background:#fff; font-size:12px; cursor:pointer;">✓ Finalizar coletas do dia</button>` : ''}
           </div>
         </div>
       `;
@@ -611,6 +612,39 @@
           ? `detalhes-dia.html?data=${dataRef}&placa=${encodeURIComponent(placaClicada)}`
           : `detalhes-dia.html?data=${dataRef}&placa=sem_placa`;
         window.open(url, '_blank');
+      });
+    });
+
+    resumoPorPlacaDiv.querySelectorAll('.btn-finalizar-placa').forEach(botao => {
+      botao.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const placaClicada = botao.dataset.placa;
+        const dataRef = resumoFiltroData.value || hojeLocalISO();
+
+        const confirmar = confirm(`Finalizar todas as coletas da placa ${placaClicada} no dia ${formatarData(dataRef)}?\n\nElas deixarão de aparecer para o motorista.`);
+        if (!confirmar) return;
+
+        botao.disabled = true;
+        botao.textContent = 'Finalizando...';
+
+        const { error } = await supabaseClient
+          .from('agendamentos_coleta')
+          .update({ status: 'coletado' })
+          .eq('data_coleta', dataRef)
+          .eq('placa_veiculo', placaClicada)
+          .in('status', ['pendente', 'confirmado']);
+
+        if (error) {
+          mostrarToast('Não foi possível finalizar as coletas.', false);
+          console.error(error);
+          botao.disabled = false;
+          botao.textContent = '✓ Finalizar coletas do dia';
+          return;
+        }
+
+        mostrarToast('Coletas do dia finalizadas.', true);
+        await atualizarResumoDia();
+        await carregarAgendamentos();
       });
     });
   }

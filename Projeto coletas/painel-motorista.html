@@ -138,10 +138,12 @@
     conteudo.className = 'loading';
     conteudo.textContent = 'Carregando...';
 
-    // A RLS do Supabase já garante que só voltam agendamentos da placa deste motorista
+    // A RLS do Supabase já garante que só voltam agendamentos da placa deste motorista.
+    // Coletas já finalizadas ("coletado") ou canceladas não aparecem mais aqui.
     const { data, error } = await supabaseClient
       .from('agendamentos_coleta')
       .select('*')
+      .in('status', ['pendente', 'confirmado'])
       .order('data_coleta', { ascending: true });
 
     if (error) {
@@ -217,6 +219,7 @@
           console.error(error);
         } else {
           mostrarToast('Status atualizado.', true);
+          await carregarAgendamentos();
         }
       });
     });
