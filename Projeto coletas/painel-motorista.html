@@ -179,8 +179,9 @@
     `;
 
     for (const row of rows) {
+      const corLinha = row.status === 'pendente' ? 'background-color: rgba(220,38,38,0.06);' : '';
       html += `
-        <tr>
+        <tr data-row-id="${row.id}" style="${corLinha} transition: background-color 0.4s;">
           <td>${formatarData(row.data_coleta)}</td>
           <td>${row.nome_empresa || '-'}</td>
           <td>${formatarCNPJ(row.cnpj)}</td>
@@ -205,6 +206,7 @@
       select.addEventListener('change', async (e) => {
         const id = e.target.dataset.id;
         const novoStatus = e.target.value;
+        const linha = e.target.closest('tr');
         e.target.disabled = true;
 
         const { error } = await supabaseClient
@@ -217,9 +219,19 @@
         if (error) {
           mostrarToast('Não foi possível atualizar o status.', false);
           console.error(error);
+          return;
+        }
+
+        mostrarToast('Status atualizado.', true);
+
+        if (novoStatus === 'coletado') {
+          // Pisca verde antes de sumir da lista
+          linha.style.backgroundColor = 'rgba(22,163,74,0.20)';
+          setTimeout(async () => { await carregarAgendamentos(); }, 700);
+        } else if (novoStatus === 'pendente') {
+          linha.style.backgroundColor = 'rgba(220,38,38,0.06)';
         } else {
-          mostrarToast('Status atualizado.', true);
-          await carregarAgendamentos();
+          linha.style.backgroundColor = '';
         }
       });
     });
