@@ -168,20 +168,30 @@
   }
   .toast-ok { background: #ecfdf5; color: #047857; }
   .toast-fail { background: #fef2f2; color: #b91c1c; }
+
+  /* ==== RESPONSIVIDADE PARA CELULAR ==== */
+  @media (max-width: 768px) {
+    body { padding: 16px 10px; }
+    .layout { flex-direction: column; gap: 16px; }
+    .wrap { flex: 1 1 auto; width: 100%; min-width: 0; }
+    .resumo-card { width: 100%; position: static; }
+    h1 { font-size: 19px; }
+    .table-card { -webkit-overflow-scrolling: touch; }
+  }
 </style>
 </head>
 <body>
 
 <div class="layout">
 <div class="wrap">
-  <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+  <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
     <div>
       <h1>Painel de agendamentos</h1>
       <p class="subtitle">Acompanhe e atualize o status das coletas solicitadas.</p>
     </div>
-    <div style="display:flex; gap:8px;">
+    <div style="display:flex; gap:8px; flex-wrap:wrap;">
       <a href="motorista-login.html" style="text-decoration:none;">
-        <button style="padding:8px 14px; border:1px solid #d1d5db; border-radius:8px; background:#fff; font-size:14px; cursor:pointer;">Área do motorista</button>
+        <button style="padding:8px 14px; border:1px solid #d1d5db; border-radius:8px; background:#fff; font-size:14px; cursor:pointer; white-space:nowrap;">Área do motorista</button>
       </a>
       <button id="btn-sair" style="padding:8px 14px; border:1px solid #d1d5db; border-radius:8px; background:#fff; font-size:14px; cursor:pointer;">Sair</button>
     </div>

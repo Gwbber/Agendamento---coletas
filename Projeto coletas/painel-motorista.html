@@ -55,12 +55,17 @@
   }
   .toast-ok { background: #ecfdf5; color: #047857; }
   .toast-fail { background: #fef2f2; color: #b91c1c; }
+
+  @media (max-width: 768px) {
+    body { padding: 16px 10px; }
+    h1 { font-size: 19px; }
+  }
 </style>
 </head>
 <body>
 
 <div class="wrap">
-  <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+  <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
     <div>
       <h1>Minhas coletas</h1>
       <p class="subtitle">Agendamentos atribuídos ao seu veículo.</p>
