@@ -189,8 +189,8 @@
           <td>${row.peso_kg ?? '-'}</td>
           <td>
             <select class="status-select" data-id="${row.id}">
-              <option value="pendente" ${row.status === 'pendente' ? 'selected' : ''}>Pendente</option>
-              <option value="confirmado" ${row.status === 'confirmado' ? 'selected' : ''}>Confirmado</option>
+              <option value="pendente" ${row.status !== 'coletado' ? 'selected' : ''}>Pendente</option>
+              <option value="coletado" ${row.status === 'coletado' ? 'selected' : ''}>Coletado</option>
             </select>
           </td>
         </tr>
@@ -222,7 +222,14 @@
         }
 
         mostrarToast('Status atualizado.', true);
-        linha.style.backgroundColor = novoStatus === 'pendente' ? 'rgba(220,38,38,0.06)' : '';
+
+        if (novoStatus === 'coletado') {
+          // Pisca verde antes de sumir da lista
+          linha.style.backgroundColor = 'rgba(22,163,74,0.20)';
+          setTimeout(async () => { await carregarAgendamentos(); }, 700);
+        } else {
+          linha.style.backgroundColor = 'rgba(220,38,38,0.06)';
+        }
       });
     });
   }
