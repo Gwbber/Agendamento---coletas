@@ -139,11 +139,11 @@
     conteudo.textContent = 'Carregando...';
 
     // A RLS do Supabase já garante que só voltam agendamentos da placa deste motorista.
-    // Coletas já finalizadas ("coletado") ou canceladas não aparecem mais aqui.
+    // Só somem da lista quando a transportadora finalizar (campo "finalizado"), não pelo status marcado aqui.
     const { data, error } = await supabaseClient
       .from('agendamentos_coleta')
       .select('*')
-      .in('status', ['pendente', 'confirmado'])
+      .eq('finalizado', false)
       .order('data_coleta', { ascending: true });
 
     if (error) {
@@ -179,7 +179,9 @@
     `;
 
     for (const row of rows) {
-      const corLinha = row.status === 'pendente' ? 'background-color: rgba(220,38,38,0.06);' : '';
+      const corLinha = row.status === 'coletado'
+        ? 'background-color: rgba(22,163,74,0.20);'
+        : 'background-color: rgba(220,38,38,0.06);';
       html += `
         <tr data-row-id="${row.id}" style="${corLinha} transition: background-color 0.4s;">
           <td>${formatarData(row.data_coleta)}</td>
@@ -222,14 +224,9 @@
         }
 
         mostrarToast('Status atualizado.', true);
-
-        if (novoStatus === 'coletado') {
-          // Pisca verde antes de sumir da lista
-          linha.style.backgroundColor = 'rgba(22,163,74,0.20)';
-          setTimeout(async () => { await carregarAgendamentos(); }, 700);
-        } else {
-          linha.style.backgroundColor = 'rgba(220,38,38,0.06)';
-        }
+        linha.style.backgroundColor = novoStatus === 'coletado'
+          ? 'rgba(22,163,74,0.20)'
+          : 'rgba(220,38,38,0.06)';
       });
     });
   }

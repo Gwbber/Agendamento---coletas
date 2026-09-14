@@ -629,10 +629,9 @@
 
         const { error } = await supabaseClient
           .from('agendamentos_coleta')
-          .update({ status: 'coletado' })
+          .update({ finalizado: true })
           .eq('data_coleta', dataRef)
-          .eq('placa_veiculo', placaClicada)
-          .in('status', ['pendente', 'confirmado']);
+          .eq('placa_veiculo', placaClicada);
 
         if (error) {
           mostrarToast('Não foi possível finalizar as coletas.', false);
