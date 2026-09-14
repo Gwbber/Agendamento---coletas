@@ -227,7 +227,7 @@
           <span>${item.nome_empresa || '-'}</span>
           <span>${item.quantidade_volumes ?? '-'} volumes</span>
           <span>${item.peso_kg ?? '-'} kg</span>
-          ${item.placa_veiculo ? `<span>Veículo: ${item.placa_veiculo}</span>` : ''}
+          ${item.placa_veiculo ? `<span>Veículo: ${item.placa_veiculo}${item.motorista_nome ? ' — ' + item.motorista_nome : ''}</span>` : ''}
         </div>
       </div>
     `).join('');
