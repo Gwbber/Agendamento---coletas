@@ -520,7 +520,7 @@
 
     const { data, error } = await supabaseClient
       .from('agendamentos_coleta')
-      .select('placa_veiculo, peso_kg, quantidade_volumes, nome_empresa')
+      .select('placa_veiculo, peso_kg, quantidade_volumes, nome_empresa, qtd_paletes')
       .eq('data_coleta', dataRef);
 
     if (error) {
@@ -553,9 +553,10 @@
     const grupos = {}; // placa (ou 'sem_placa') -> { peso, volumes, fornecedores:Set }
     linhas.forEach(r => {
       const chave = r.placa_veiculo || 'sem_placa';
-      if (!grupos[chave]) grupos[chave] = { peso: 0, volumes: 0, fornecedores: new Set() };
+      if (!grupos[chave]) grupos[chave] = { peso: 0, volumes: 0, paletes: 0, fornecedores: new Set() };
       grupos[chave].peso += Number(r.peso_kg) || 0;
       grupos[chave].volumes += Number(r.quantidade_volumes) || 0;
+      grupos[chave].paletes += Number(r.qtd_paletes) || 0;
       if (r.nome_empresa) grupos[chave].fornecedores.add(r.nome_empresa);
     });
 
@@ -585,6 +586,7 @@
             ${motorista ? `<div class="motorista-nome">${motorista}</div>` : ''}
             <div class="linha"><span>Peso</span><span>${g.peso.toLocaleString('pt-BR')} kg</span></div>
             <div class="linha"><span>Volumes</span><span>${g.volumes.toLocaleString('pt-BR')}</span></div>
+            <div class="linha"><span>Paletes</span><span>${g.paletes.toLocaleString('pt-BR')}</span></div>
             <div class="linha"><span>Fornecedores</span><span>${g.fornecedores.size}</span></div>
             <button class="btn-detalhe-placa" data-placa="${chave === 'sem_placa' ? '' : chave}" style="width:100%; margin-top:8px; padding:6px; border:1px solid #d1d5db; border-radius:6px; background:#fff; font-size:12px; cursor:pointer;">Ver detalhes ↗</button>
             ${chave !== 'sem_placa' ? `<button class="btn-finalizar-placa" data-placa="${chave}" style="width:100%; margin-top:6px; padding:6px; border:1px solid #16a34a; color:#16a34a; border-radius:6px; background:#fff; font-size:12px; cursor:pointer;">✓ Finalizar coletas do dia</button>` : ''}
@@ -703,6 +705,8 @@
             <th>Empresa</th>
             <th>Volumes</th>
             <th>Peso (kg)</th>
+            <th>Paletes</th>
+            <th>Obs.</th>
             <th>Placa/Motorista</th>
             <th>Status</th>
           </tr>
@@ -719,6 +723,8 @@
           <td>${row.nome_empresa || '-'}</td>
           <td>${row.quantidade_volumes ?? '-'}</td>
           <td>${row.peso_kg ?? '-'}</td>
+          <td>${row.qtd_paletes ?? '-'}</td>
+          <td style="max-width:220px; white-space:normal;">${row.observacoes ? row.observacoes : '-'}</td>
           <td>
             <select class="placa-select" data-id="${row.id}">
               <option value="">Não atribuído</option>

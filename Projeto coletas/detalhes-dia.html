@@ -115,7 +115,7 @@
   async function carregar() {
     let query = supabaseClient
       .from('agendamentos_coleta')
-      .select('nome_empresa, quantidade_volumes, peso_kg, status, placa_veiculo')
+      .select('nome_empresa, quantidade_volumes, peso_kg, status, placa_veiculo, qtd_paletes, observacoes')
       .eq('data_coleta', dataRef)
       .order('nome_empresa', { ascending: true });
 
@@ -140,7 +140,7 @@
       return;
     }
 
-    let pesoTotal = 0, volumesTotal = 0;
+    let pesoTotal = 0, volumesTotal = 0, paletesTotal = 0;
     const fornecedoresUnicos = new Set();
 
     let html = `
@@ -151,6 +151,8 @@
             ${placaRef ? '' : '<th>Placa</th>'}
             <th>Volumes</th>
             <th>Peso (kg)</th>
+            <th>Paletes</th>
+            <th>Obs.</th>
             <th>Status</th>
           </tr>
         </thead>
@@ -160,6 +162,7 @@
     linhas.forEach(r => {
       pesoTotal += Number(r.peso_kg) || 0;
       volumesTotal += Number(r.quantidade_volumes) || 0;
+      paletesTotal += Number(r.qtd_paletes) || 0;
       if (r.nome_empresa) fornecedoresUnicos.add(r.nome_empresa);
 
       html += `
@@ -168,6 +171,8 @@
           ${placaRef ? '' : `<td>${r.placa_veiculo || '—'}</td>`}
           <td>${r.quantidade_volumes ?? '-'}</td>
           <td>${r.peso_kg ?? '-'}</td>
+          <td>${r.qtd_paletes ?? '-'}</td>
+          <td style="max-width:220px; white-space:normal;">${r.observacoes ? r.observacoes : '-'}</td>
           <td><span class="badge st-${r.status}">${r.status}</span></td>
         </tr>
       `;
@@ -181,6 +186,8 @@
             ${placaRef ? '' : '<td></td>'}
             <td>${volumesTotal.toLocaleString('pt-BR')}</td>
             <td>${pesoTotal.toLocaleString('pt-BR')} kg</td>
+            <td>${paletesTotal.toLocaleString('pt-BR')}</td>
+            <td></td>
             <td>${fornecedoresUnicos.size} fornecedores</td>
           </tr>
         </tfoot>

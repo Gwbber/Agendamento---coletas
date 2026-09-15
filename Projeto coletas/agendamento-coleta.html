@@ -44,15 +44,17 @@
     margin: 16px 0 6px;
     color: #374151;
   }
-  input {
+  input, textarea {
     width: 100%;
     padding: 10px 12px;
     font-size: 15px;
     border: 1px solid #d1d5db;
     border-radius: 8px;
     background: #fff;
+    font-family: inherit;
+    resize: vertical;
   }
-  input:focus {
+  input:focus, textarea:focus {
     outline: none;
     border-color: #7c3aed;
     box-shadow: 0 0 0 3px rgba(124,58,237,0.15);
@@ -157,6 +159,13 @@
         <div class="error" id="err-peso_kg">Informe o peso.</div>
       </div>
     </div>
+
+    <label for="qtd_paletes">Nº de paletes montados</label>
+    <input type="number" id="qtd_paletes" min="0" step="1" placeholder="0">
+    <div class="hint">Deixe em branco ou 0 se não houver paletes montados.</div>
+
+    <label for="observacoes">Observações</label>
+    <textarea id="observacoes" rows="3" placeholder="Alguma informação adicional sobre a coleta"></textarea>
 
     <button type="submit" id="btn-submit">Agendar coleta</button>
   </form>
@@ -268,13 +277,18 @@
     btnSubmit.disabled = true;
     btnSubmit.innerHTML = '<span class="spinner"></span>Enviando...';
 
+    const paletesValor = document.getElementById('qtd_paletes').value;
+    const obsValor = document.getElementById('observacoes').value.trim();
+
     const payload = {
       data_coleta: document.getElementById('data_coleta').value,
       nome_solicitante: document.getElementById('nome_solicitante').value.trim(),
       cnpj: limparCNPJ(cnpjInput.value),
       nome_empresa: nomeEmpresaInput.value.trim(),
       quantidade_volumes: Number(document.getElementById('quantidade_volumes').value),
-      peso_kg: Number(document.getElementById('peso_kg').value)
+      peso_kg: Number(document.getElementById('peso_kg').value),
+      qtd_paletes: paletesValor === '' ? null : Number(paletesValor),
+      observacoes: obsValor === '' ? null : obsValor
     };
 
     const { error } = await supabaseClient.from('agendamentos_coleta').insert([payload], { returning: 'minimal' });
