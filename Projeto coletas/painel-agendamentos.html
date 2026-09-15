@@ -13,7 +13,7 @@
     padding: 24px 16px;
     color: #1f2328;
   }
-  .wrap { max-width: 1100px; flex: 1 1 600px; }
+  .wrap { max-width: 1100px; flex: 1 1 520px; min-width: 0; }
   .layout {
     display: flex;
     gap: 20px;
@@ -24,7 +24,7 @@
   }
   .resumo-card {
     width: 280px;
-    flex-shrink: 0;
+    flex: 0 0 280px;
     background: #fff;
     border-radius: 12px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.08);
@@ -658,7 +658,7 @@
     let query = supabaseClient
       .from('agendamentos_coleta')
       .select('*')
-      .order('data_coleta', { ascending: true });
+      .order('data_coleta', { ascending: false });
 
     const status = filtroStatus.value;
     if (status) query = query.eq('status', status);
