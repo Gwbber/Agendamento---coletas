@@ -22,7 +22,6 @@
     margin: 0 auto;
     flex-wrap: wrap;
     padding-left: 64px;
-    padding-right: 300px;
   }
   .sidebar-esquerda {
     order: -1;
@@ -68,16 +67,22 @@
     transform: rotate(180deg);
   }
   .resumo-card {
-    width: 280px;
+    width: auto;
     background: #fff;
     border-radius: 12px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-    padding: 18px;
+    padding: 12px 14px;
     position: fixed;
     top: 20px;
     right: max(16px, calc((100vw - 1800px) / 2));
     max-height: calc(100vh - 40px);
     overflow-y: auto;
+    transition: width 0.15s;
+  }
+  .resumo-card.resumo-aberto {
+    width: 280px;
+    padding: 18px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.18);
   }
   .resumo-card h2 {
     font-size: 15px;
@@ -229,7 +234,7 @@
     body { padding: 16px 10px; }
     .layout { flex-direction: column; gap: 16px; padding-left: 0; padding-right: 0; }
     .wrap { flex: 1 1 auto; width: 100%; min-width: 0; }
-    .resumo-card { width: 100%; position: static; }
+    .resumo-card, .resumo-card.resumo-aberto { width: 100%; position: static; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
     .sidebar-esquerda { width: 100%; flex: 0 0 auto; position: static; }
     .sidebar-esquerda .painel-sidebar-motoristas { width: 100%; top: 44px; }
     h1 { font-size: 19px; }
@@ -289,7 +294,7 @@
   </div>
 </div>
 
-<aside class="resumo-card">
+<aside class="resumo-card" id="aside-resumo">
   <div id="cabecalho-resumo" style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
     <span style="display:flex; align-items:center; gap:8px; cursor:pointer; flex:1;" id="toggle-resumo">
       <span id="seta-resumo" style="display:inline-block; transition:transform 0.15s; font-size:12px;">▶</span>
@@ -555,11 +560,13 @@
   const toggleResumo = document.getElementById('toggle-resumo');
   const setaResumo = document.getElementById('seta-resumo');
   const conteudoResumo = document.getElementById('conteudo-resumo');
+  const asideResumo = document.getElementById('aside-resumo');
 
   toggleResumo.addEventListener('click', () => {
     const aberto = conteudoResumo.style.display !== 'none';
     conteudoResumo.style.display = aberto ? 'none' : 'block';
     setaResumo.style.transform = aberto ? 'rotate(0deg)' : 'rotate(90deg)';
+    asideResumo.classList.toggle('resumo-aberto', !aberto);
   });
 
   const btnRefreshResumo = document.getElementById('btn-refresh-resumo');
