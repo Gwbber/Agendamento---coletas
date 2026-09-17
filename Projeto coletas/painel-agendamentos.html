@@ -22,8 +22,49 @@
     margin: 0 auto;
     flex-wrap: wrap;
   }
-  .sidebar-esquerda { order: -1; }
-  .sidebar-esquerda.recolhida .conteudo-sidebar-esquerda-interno { display: none; }
+  .sidebar-esquerda {
+    order: -1;
+    width: 44px;
+    flex: 0 0 44px;
+    padding: 0;
+    overflow: visible;
+    position: sticky;
+    top: 20px;
+    z-index: 30;
+  }
+  .sidebar-esquerda .icone-sidebar-motoristas {
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 15px;
+    color: #6b7280;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    transition: transform 0.15s;
+  }
+  .sidebar-esquerda .painel-sidebar-motoristas {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 280px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+    padding: 18px;
+  }
+  .sidebar-esquerda:hover .painel-sidebar-motoristas,
+  .sidebar-esquerda.aberta-fixa .painel-sidebar-motoristas {
+    display: block;
+  }
+  .sidebar-esquerda:hover .icone-sidebar-motoristas,
+  .sidebar-esquerda.aberta-fixa .icone-sidebar-motoristas {
+    transform: rotate(180deg);
+  }
   .resumo-card {
     width: 280px;
     flex: 0 0 280px;
@@ -97,6 +138,10 @@
     font-size: 14px;
     background: #fff;
   }
+  .toolbar #filtro-placa {
+    width: 100px;
+    flex: 0 0 100px;
+  }
   .toolbar button {
     padding: 8px 14px;
     border: 1px solid #d1d5db;
@@ -152,6 +197,10 @@
   .st-confirmado { background: #ede9fe; color: #5b21b6; }
   .st-coletado { background: #d1fae5; color: #065f46; }
   .st-cancelado { background: #fee2e2; color: #991b1b; }
+  tr.linha-pendente td { background: rgba(234,179,8,0.12); }
+  tr.linha-confirmado td { background: rgba(37,99,235,0.10); }
+  tr.linha-coletado td { background: rgba(22,163,74,0.12); }
+  tr.linha-cancelado td { background: rgba(220,38,38,0.10); }
   .empty, .loading {
     padding: 40px;
     text-align: center;
@@ -177,6 +226,8 @@
     .layout { flex-direction: column; gap: 16px; }
     .wrap { flex: 1 1 auto; width: 100%; min-width: 0; }
     .resumo-card { width: 100%; position: static; }
+    .sidebar-esquerda { width: 100%; flex: 0 0 auto; position: static; }
+    .sidebar-esquerda .painel-sidebar-motoristas { width: 100%; top: 44px; }
     h1 { font-size: 19px; }
     .table-card { -webkit-overflow-scrolling: touch; }
   }
@@ -185,16 +236,16 @@
 <body>
 
 <div class="layout">
-<aside class="resumo-card sidebar-esquerda" id="sidebar-motoristas">
-  <div id="cabecalho-sidebar-motoristas" style="display:flex; align-items:center; justify-content:space-between; gap:8px; cursor:pointer;">
-    <span style="display:flex; align-items:center; gap:8px;">
-      <span id="seta-sidebar-motoristas" style="display:inline-block; transition:transform 0.15s; font-size:12px;">▼</span>
+<aside class="sidebar-esquerda" id="sidebar-motoristas">
+  <div class="icone-sidebar-motoristas" id="btn-toggle-sidebar-motoristas" title="Motoristas">▶</div>
+  <div class="painel-sidebar-motoristas">
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
       <h2 style="margin:0;">Motoristas</h2>
-    </span>
-  </div>
-  <div id="conteudo-sidebar-motoristas" style="margin-top:12px;">
-    <button id="btn-novo-motorista" style="width:100%; padding:8px; border:1px solid #d1d5db; border-radius:8px; background:#fff; font-size:13px; cursor:pointer; margin-bottom:12px;">+ Novo motorista</button>
-    <div id="lista-motoristas">Carregando...</div>
+    </div>
+    <div style="margin-top:12px;">
+      <button id="btn-novo-motorista" style="width:100%; padding:8px; border:1px solid #d1d5db; border-radius:8px; background:#fff; font-size:13px; cursor:pointer; margin-bottom:12px;">+ Novo motorista</button>
+      <div id="lista-motoristas">Carregando...</div>
+    </div>
   </div>
 </aside>
 
@@ -223,7 +274,7 @@
     <select id="filtro-placa">
       <option value="">Todas as placas</option>
     </select>
-    <input type="date" id="filtro-data" title="Filtrar por previsão de coleta">
+    <input type="date" id="filtro-data" title="Filtrar por data solicitada">
     <input type="text" id="filtro-busca" placeholder="Buscar por CNPJ ou empresa">
     <button id="btn-atualizar">Atualizar</button>
     <button id="btn-limpar-filtros">Limpar filtros</button>
@@ -333,14 +384,17 @@
   const listaMotoristasDiv = document.getElementById('lista-motoristas');
   const motErro = document.getElementById('mot-erro');
   const sidebarMotoristas = document.getElementById('sidebar-motoristas');
-  const cabecalhoSidebarMotoristas = document.getElementById('cabecalho-sidebar-motoristas');
-  const setaSidebarMotoristas = document.getElementById('seta-sidebar-motoristas');
-  const conteudoSidebarMotoristas = document.getElementById('conteudo-sidebar-motoristas');
+  const btnToggleSidebarMotoristas = document.getElementById('btn-toggle-sidebar-motoristas');
 
-  cabecalhoSidebarMotoristas.addEventListener('click', () => {
-    const aberto = conteudoSidebarMotoristas.style.display !== 'none';
-    conteudoSidebarMotoristas.style.display = aberto ? 'none' : 'block';
-    setaSidebarMotoristas.style.transform = aberto ? 'rotate(-90deg)' : 'rotate(0deg)';
+  // No hover (desktop) o painel já abre sozinho via CSS. O clique serve para
+  // "fixar" aberto — útil no celular/tablet, onde não existe hover.
+  btnToggleSidebarMotoristas.addEventListener('click', () => {
+    sidebarMotoristas.classList.toggle('aberta-fixa');
+  });
+  document.addEventListener('click', (e) => {
+    if (!sidebarMotoristas.contains(e.target)) {
+      sidebarMotoristas.classList.remove('aberta-fixa');
+    }
   });
 
   async function carregarMotoristas() {
@@ -360,8 +414,8 @@
     // Popula o filtro de placas
     const filtroPlaca = document.getElementById('filtro-placa');
     const valorAtual = filtroPlaca.value;
-    filtroPlaca.innerHTML = '<option value="">Todas as placas</option>' +
-      listaMotoristas.map(m => `<option value="${m.placa}">${m.placa} — ${m.nome}</option>`).join('');
+    filtroPlaca.innerHTML = '<option value="">Placas</option>' +
+      listaMotoristas.map(m => `<option value="${m.placa}" title="${m.placa} — ${m.nome}">${m.placa}</option>`).join('');
     filtroPlaca.value = valorAtual;
 
     if (listaMotoristas.length === 0) {
@@ -663,7 +717,7 @@
     let query = supabaseClient
       .from('agendamentos_coleta')
       .select('*')
-      .order('previsao_coleta', { ascending: false });
+      .order('data_coleta', { ascending: false });
 
     const status = filtroStatus.value;
     if (status) query = query.eq('status', status);
@@ -672,7 +726,7 @@
     if (placa) query = query.eq('placa_veiculo', placa);
 
     const dataFiltro = document.getElementById('filtro-data').value;
-    if (dataFiltro) query = query.eq('previsao_coleta', dataFiltro);
+    if (dataFiltro) query = query.eq('data_coleta', dataFiltro);
 
     const busca = filtroBusca.value.trim();
     if (busca) {
@@ -723,7 +777,7 @@
     for (const row of rows) {
       const previsaoDiferente = row.previsao_coleta && row.previsao_coleta !== row.data_coleta;
       html += `
-        <tr>
+        <tr class="linha-${row.status}" data-id="${row.id}">
           <td>${formatarData(row.data_coleta)}</td>
           <td>
             <input type="date" class="previsao-input" data-id="${row.id}" value="${row.previsao_coleta || row.data_coleta}"
@@ -806,6 +860,7 @@
       select.addEventListener('change', async (e) => {
         const id = e.target.dataset.id;
         const novoStatus = e.target.value;
+        const linha = e.target.closest('tr');
         e.target.disabled = true;
 
         const { error } = await supabaseClient
@@ -820,6 +875,7 @@
           console.error(error);
         } else {
           mostrarToast('Status atualizado.', true);
+          linha.className = `linha-${novoStatus}`;
         }
       });
     });

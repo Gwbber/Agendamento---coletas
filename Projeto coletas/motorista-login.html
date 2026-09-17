@@ -79,8 +79,8 @@
   <p class="subtitle">Faça login para ver suas coletas.</p>
 
   <form id="form-login">
-    <label for="email">E-mail</label>
-    <input type="email" id="email" required autocomplete="username">
+    <label for="placa">Placa do veículo</label>
+    <input type="text" id="placa" placeholder="ABC1D23" maxlength="7" required autocomplete="username" style="text-transform:uppercase;">
 
     <label for="senha">Senha</label>
     <input type="password" id="senha" required autocomplete="current-password">
@@ -112,6 +112,11 @@
   const form = document.getElementById('form-login');
   const erroDiv = document.getElementById('erro');
   const btnEntrar = document.getElementById('btn-entrar');
+  const placaInput = document.getElementById('placa');
+
+  placaInput.addEventListener('input', (e) => {
+    e.target.value = e.target.value.toUpperCase();
+  });
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -119,11 +124,15 @@
     btnEntrar.disabled = true;
     btnEntrar.textContent = 'Entrando...';
 
-    const email = document.getElementById('email').value.trim();
+    const placa = document.getElementById('placa').value.trim().toUpperCase();
     const senha = document.getElementById('senha').value;
 
+    // O login continua sendo feito por e-mail no Supabase Auth, mas o e-mail
+    // é gerado automaticamente a partir da placa (mesmo padrão usado no cadastro).
+    const emailGerado = `${placa.toLowerCase()}@motorista.coletas.com`;
+
     const { error } = await supabaseClient.auth.signInWithPassword({
-      email: email,
+      email: emailGerado,
       password: senha
     });
 
@@ -131,7 +140,7 @@
     btnEntrar.textContent = 'Entrar';
 
     if (error) {
-      erroDiv.textContent = 'E-mail ou senha incorretos.';
+      erroDiv.textContent = 'Placa ou senha incorretos.';
       erroDiv.style.display = 'block';
       return;
     }
