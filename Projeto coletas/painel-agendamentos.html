@@ -21,15 +21,16 @@
     max-width: 1800px;
     margin: 0 auto;
     flex-wrap: wrap;
+    padding-left: 64px;
   }
   .sidebar-esquerda {
     order: -1;
     width: 44px;
-    flex: 0 0 44px;
     padding: 0;
     overflow: visible;
-    position: sticky;
+    position: fixed;
     top: 20px;
+    left: max(16px, calc((100vw - 1800px) / 2));
     z-index: 30;
   }
   .sidebar-esquerda .icone-sidebar-motoristas {
@@ -223,7 +224,7 @@
   /* ==== RESPONSIVIDADE PARA CELULAR ==== */
   @media (max-width: 768px) {
     body { padding: 16px 10px; }
-    .layout { flex-direction: column; gap: 16px; }
+    .layout { flex-direction: column; gap: 16px; padding-left: 0; }
     .wrap { flex: 1 1 auto; width: 100%; min-width: 0; }
     .resumo-card { width: 100%; position: static; }
     .sidebar-esquerda { width: 100%; flex: 0 0 auto; position: static; }
