@@ -279,9 +279,11 @@
 
     const paletesValor = document.getElementById('qtd_paletes').value;
     const obsValor = document.getElementById('observacoes').value.trim();
+    const dataColetaValor = document.getElementById('data_coleta').value;
 
     const payload = {
-      data_coleta: document.getElementById('data_coleta').value,
+      data_coleta: dataColetaValor,
+      previsao_coleta: dataColetaValor, // começa igual à data pedida; a transportadora pode ajustar depois
       nome_solicitante: document.getElementById('nome_solicitante').value.trim(),
       cnpj: limparCNPJ(cnpjInput.value),
       nome_empresa: nomeEmpresaInput.value.trim(),

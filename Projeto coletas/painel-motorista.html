@@ -143,8 +143,7 @@
     const { data, error } = await supabaseClient
       .from('agendamentos_coleta')
       .select('*')
-      .eq('finalizado', false)
-      .order('data_coleta', { ascending: true });
+      .eq('finalizado', false);
 
     if (error) {
       conteudo.className = 'empty';
@@ -158,6 +157,9 @@
       conteudo.textContent = 'Nenhuma coleta atribuída a você por enquanto.';
       return;
     }
+
+    // Ordena pela data que realmente vale (previsão, quando definida pela transportadora)
+    data.sort((a, b) => (a.previsao_coleta || a.data_coleta).localeCompare(b.previsao_coleta || b.data_coleta));
 
     renderizarTabela(data);
   }
@@ -184,7 +186,7 @@
         : 'background-color: rgba(220,38,38,0.06);';
       html += `
         <tr data-row-id="${row.id}" style="${corLinha} transition: background-color 0.4s;">
-          <td>${formatarData(row.data_coleta)}</td>
+          <td>${formatarData(row.previsao_coleta || row.data_coleta)}</td>
           <td>${row.nome_empresa || '-'}</td>
           <td>${formatarCNPJ(row.cnpj)}</td>
           <td>${row.quantidade_volumes ?? '-'}</td>

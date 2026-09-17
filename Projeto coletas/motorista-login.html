@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Área do motorista</title>
+<title>Login - Área do motorista</title>
 <style>
   * { box-sizing: border-box; }
   body {
@@ -26,109 +26,70 @@
     box-shadow: 0 1px 3px rgba(0,0,0,0.08);
   }
   h1 { font-size: 20px; margin: 0 0 4px; }
-  p.subtitle { font-size: 14px; color: #6b7280; margin: 0 0 20px; }
-  .tabs {
-    display: flex;
-    background: #f3f4f6;
-    border-radius: 8px;
-    padding: 4px;
-    margin-bottom: 20px;
-  }
-  .tab {
-    flex: 1;
-    text-align: center;
-    padding: 8px;
-    font-size: 13px;
-    font-weight: 600;
-    border-radius: 6px;
-    cursor: pointer;
-    color: #6b7280;
-  }
-  .tab.ativa {
-    background: #fff;
-    color: #1f2328;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.08);
-  }
-  label { display: block; font-size: 13px; font-weight: 600; margin: 14px 0 6px; color: #374151; }
+  p.subtitle { font-size: 14px; color: #6b7280; margin: 0 0 24px; }
+  label { display: block; font-size: 13px; font-weight: 600; margin: 16px 0 6px; color: #374151; }
   input {
     width: 100%;
     padding: 10px 12px;
     font-size: 15px;
     border: 1px solid #d1d5db;
     border-radius: 8px;
-    text-transform: uppercase;
   }
-  input[type="password"] { text-transform: none; }
   input:focus {
     outline: none;
-    border-color: #7c3aed;
-    box-shadow: 0 0 0 3px rgba(124,58,237,0.15);
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.15);
   }
-  button.principal {
+  button {
     width: 100%;
-    margin-top: 22px;
+    margin-top: 24px;
     padding: 13px;
     font-size: 15px;
     font-weight: 600;
     color: #fff;
-    background: #7c3aed;
+    background: #2563eb;
     border: none;
     border-radius: 8px;
     cursor: pointer;
   }
-  button.principal:disabled { background: #c4b5fd; cursor: not-allowed; }
-  .msg {
+  button:disabled { background: #93b4f0; cursor: not-allowed; }
+  #erro {
     margin-top: 14px;
     font-size: 13px;
+    color: #dc2626;
     text-align: center;
-    padding: 10px;
-    border-radius: 8px;
     display: none;
   }
-  .msg-erro { background: #fef2f2; color: #b91c1c; }
-  .msg-aviso { background: #fef3c7; color: #92400e; }
-  .hint { font-size: 12px; color: #9ca3af; margin-top: 4px; }
+  #aviso-inatividade {
+    margin-top: 14px;
+    font-size: 13px;
+    color: #92400e;
+    background: #fef3c7;
+    padding: 10px;
+    border-radius: 8px;
+    text-align: center;
+    display: none;
+  }
 </style>
 </head>
 <body>
 
 <div class="card">
   <h1>Área do motorista</h1>
-  <p class="subtitle">Acesse com a placa do seu veículo.</p>
+  <p class="subtitle">Faça login para ver suas coletas.</p>
 
-  <div class="tabs">
-    <div class="tab ativa" id="tab-entrar">Entrar</div>
-    <div class="tab" id="tab-criar">Criar senha</div>
-  </div>
+  <form id="form-login">
+    <label for="email">E-mail</label>
+    <input type="email" id="email" required autocomplete="username">
 
-  <!-- FORM: ENTRAR -->
-  <form id="form-entrar">
-    <label for="placa-entrar">Placa do veículo</label>
-    <input type="text" id="placa-entrar" placeholder="ABC1D23" required>
+    <label for="senha">Senha</label>
+    <input type="password" id="senha" required autocomplete="current-password">
 
-    <label for="senha-entrar">Senha</label>
-    <input type="password" id="senha-entrar" required autocomplete="current-password">
-
-    <button type="submit" class="principal" id="btn-entrar">Entrar</button>
+    <button type="submit" id="btn-entrar">Entrar</button>
   </form>
 
-  <!-- FORM: CRIAR SENHA -->
-  <form id="form-criar" style="display:none;">
-    <label for="placa-criar">Placa do veículo</label>
-    <input type="text" id="placa-criar" placeholder="ABC1D23" required>
-    <div class="hint">A placa precisa já estar cadastrada pela transportadora.</div>
-
-    <label for="senha-criar">Crie uma senha</label>
-    <input type="password" id="senha-criar" required autocomplete="new-password" minlength="6">
-
-    <label for="senha-criar-confirma">Confirme a senha</label>
-    <input type="password" id="senha-criar-confirma" required autocomplete="new-password" minlength="6">
-
-    <button type="submit" class="principal" id="btn-criar">Criar senha e entrar</button>
-  </form>
-
-  <div id="msg-erro" class="msg msg-erro"></div>
-  <div id="msg-aviso" class="msg msg-aviso">Sua sessão expirou por inatividade. Faça login novamente.</div>
+  <div id="erro"></div>
+  <div id="aviso-inatividade">Sua sessão expirou por inatividade. Faça login novamente.</div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -138,28 +99,8 @@
 
   const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  function limparPlaca(v) {
-    return v.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
-  }
-
-  function emailDaPlaca(placaLimpa) {
-    return `${placaLimpa.toLowerCase()}@motorista.coletas.com`;
-  }
-
-  const msgErro = document.getElementById('msg-erro');
-  const msgAviso = document.getElementById('msg-aviso');
-
-  function mostrarErro(texto) {
-    msgErro.textContent = texto;
-    msgErro.style.display = 'block';
-  }
-  function esconderMensagens() {
-    msgErro.style.display = 'none';
-    msgAviso.style.display = 'none';
-  }
-
   if (new URLSearchParams(window.location.search).get('motivo') === 'inatividade') {
-    msgAviso.style.display = 'block';
+    document.getElementById('aviso-inatividade').style.display = 'block';
   }
 
   supabaseClient.auth.getSession().then(({ data }) => {
@@ -168,104 +109,30 @@
     }
   });
 
-  // Alternar abas
-  const tabEntrar = document.getElementById('tab-entrar');
-  const tabCriar = document.getElementById('tab-criar');
-  const formEntrar = document.getElementById('form-entrar');
-  const formCriar = document.getElementById('form-criar');
+  const form = document.getElementById('form-login');
+  const erroDiv = document.getElementById('erro');
+  const btnEntrar = document.getElementById('btn-entrar');
 
-  tabEntrar.addEventListener('click', () => {
-    tabEntrar.classList.add('ativa');
-    tabCriar.classList.remove('ativa');
-    formEntrar.style.display = 'block';
-    formCriar.style.display = 'none';
-    esconderMensagens();
-  });
-
-  tabCriar.addEventListener('click', () => {
-    tabCriar.classList.add('ativa');
-    tabEntrar.classList.remove('ativa');
-    formCriar.style.display = 'block';
-    formEntrar.style.display = 'none';
-    esconderMensagens();
-  });
-
-  // Entrar
-  formEntrar.addEventListener('submit', async (e) => {
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    esconderMensagens();
-    const btn = document.getElementById('btn-entrar');
-    btn.disabled = true;
-    btn.textContent = 'Entrando...';
+    erroDiv.style.display = 'none';
+    btnEntrar.disabled = true;
+    btnEntrar.textContent = 'Entrando...';
 
-    const placa = limparPlaca(document.getElementById('placa-entrar').value);
-    const senha = document.getElementById('senha-entrar').value;
+    const email = document.getElementById('email').value.trim();
+    const senha = document.getElementById('senha').value;
 
     const { error } = await supabaseClient.auth.signInWithPassword({
-      email: emailDaPlaca(placa),
+      email: email,
       password: senha
     });
 
-    btn.disabled = false;
-    btn.textContent = 'Entrar';
+    btnEntrar.disabled = false;
+    btnEntrar.textContent = 'Entrar';
 
     if (error) {
-      mostrarErro('Placa ou senha incorretos.');
-      return;
-    }
-
-    window.location.href = 'painel-motorista.html';
-  });
-
-  // Criar senha (primeiro acesso)
-  formCriar.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    esconderMensagens();
-
-    const placa = limparPlaca(document.getElementById('placa-criar').value);
-    const senha = document.getElementById('senha-criar').value;
-    const confirma = document.getElementById('senha-criar-confirma').value;
-
-    if (senha.length < 6) {
-      mostrarErro('A senha precisa ter pelo menos 6 caracteres.');
-      return;
-    }
-    if (senha !== confirma) {
-      mostrarErro('As senhas não coincidem.');
-      return;
-    }
-
-    const btn = document.getElementById('btn-criar');
-    btn.disabled = true;
-    btn.textContent = 'Verificando placa...';
-
-    // Confirma que a placa já foi cadastrada pela transportadora
-    const { data: placaExiste, error: erroRpc } = await supabaseClient.rpc('check_placa_existe', { p_placa: placa });
-
-    if (erroRpc || !placaExiste) {
-      btn.disabled = false;
-      btn.textContent = 'Criar senha e entrar';
-      mostrarErro('Placa não encontrada. Fale com a transportadora para verificar o cadastro.');
-      return;
-    }
-
-    btn.textContent = 'Criando senha...';
-
-    const { error: erroSignUp } = await supabaseClient.auth.signUp({
-      email: emailDaPlaca(placa),
-      password: senha
-    });
-
-    btn.disabled = false;
-    btn.textContent = 'Criar senha e entrar';
-
-    if (erroSignUp) {
-      if (erroSignUp.message && erroSignUp.message.toLowerCase().includes('already registered')) {
-        mostrarErro('Essa placa já tem uma senha criada. Use a aba "Entrar".');
-      } else {
-        mostrarErro('Não foi possível criar a senha. Tente novamente.');
-      }
-      console.error(erroSignUp);
+      erroDiv.textContent = 'E-mail ou senha incorretos.';
+      erroDiv.style.display = 'block';
       return;
     }
 

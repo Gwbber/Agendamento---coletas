@@ -116,7 +116,7 @@
     let query = supabaseClient
       .from('agendamentos_coleta')
       .select('nome_empresa, quantidade_volumes, peso_kg, status, placa_veiculo, qtd_paletes, observacoes')
-      .eq('data_coleta', dataRef)
+      .eq('previsao_coleta', dataRef)
       .order('nome_empresa', { ascending: true });
 
     if (placaRef === 'sem_placa') {

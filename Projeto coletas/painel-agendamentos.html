@@ -13,15 +13,17 @@
     padding: 24px 16px;
     color: #1f2328;
   }
-  .wrap { max-width: 1100px; flex: 1 1 520px; min-width: 0; }
+  .wrap { max-width: 900px; flex: 1 1 500px; min-width: 0; }
   .layout {
     display: flex;
     gap: 20px;
     align-items: flex-start;
-    max-width: 1400px;
+    max-width: 1500px;
     margin: 0 auto;
     flex-wrap: wrap;
   }
+  .sidebar-esquerda { order: -1; }
+  .sidebar-esquerda.recolhida .conteudo-sidebar-esquerda-interno { display: none; }
   .resumo-card {
     width: 280px;
     flex: 0 0 280px;
@@ -183,6 +185,19 @@
 <body>
 
 <div class="layout">
+<aside class="resumo-card sidebar-esquerda" id="sidebar-motoristas">
+  <div id="cabecalho-sidebar-motoristas" style="display:flex; align-items:center; justify-content:space-between; gap:8px; cursor:pointer;">
+    <span style="display:flex; align-items:center; gap:8px;">
+      <span id="seta-sidebar-motoristas" style="display:inline-block; transition:transform 0.15s; font-size:12px;">▼</span>
+      <h2 style="margin:0;">Motoristas</h2>
+    </span>
+  </div>
+  <div id="conteudo-sidebar-motoristas" style="margin-top:12px;">
+    <button id="btn-novo-motorista" style="width:100%; padding:8px; border:1px solid #d1d5db; border-radius:8px; background:#fff; font-size:13px; cursor:pointer; margin-bottom:12px;">+ Novo motorista</button>
+    <div id="lista-motoristas">Carregando...</div>
+  </div>
+</aside>
+
 <div class="wrap">
   <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
     <div>
@@ -197,17 +212,6 @@
     </div>
   </div>
 
-  <div class="table-card" style="margin-bottom:20px;">
-    <div id="cabecalho-motoristas" style="display:flex; justify-content:space-between; align-items:center; padding:14px; cursor:pointer;">
-      <span style="display:flex; align-items:center; gap:8px;">
-        <span id="seta-motoristas" style="display:inline-block; transition:transform 0.15s; font-size:12px;">▶</span>
-        <strong style="font-size:15px;">Motoristas cadastrados</strong>
-      </span>
-      <button id="btn-novo-motorista" style="padding:6px 12px; border:1px solid #d1d5db; border-radius:8px; background:#fff; font-size:13px; cursor:pointer;">+ Novo motorista</button>
-    </div>
-    <div id="lista-motoristas" style="padding:0 14px 14px; display:none;">Carregando...</div>
-  </div>
-
   <div class="toolbar">
     <select id="filtro-status">
       <option value="">Todos os status</option>
@@ -219,7 +223,7 @@
     <select id="filtro-placa">
       <option value="">Todas as placas</option>
     </select>
-    <input type="date" id="filtro-data" title="Filtrar por data de coleta">
+    <input type="date" id="filtro-data" title="Filtrar por previsão de coleta">
     <input type="text" id="filtro-busca" placeholder="Buscar por CNPJ ou empresa">
     <button id="btn-atualizar">Atualizar</button>
     <button id="btn-limpar-filtros">Limpar filtros</button>
@@ -328,14 +332,15 @@
   const modalMotorista = document.getElementById('modal-motorista');
   const listaMotoristasDiv = document.getElementById('lista-motoristas');
   const motErro = document.getElementById('mot-erro');
-  const cabecalhoMotoristas = document.getElementById('cabecalho-motoristas');
-  const setaMotoristas = document.getElementById('seta-motoristas');
+  const sidebarMotoristas = document.getElementById('sidebar-motoristas');
+  const cabecalhoSidebarMotoristas = document.getElementById('cabecalho-sidebar-motoristas');
+  const setaSidebarMotoristas = document.getElementById('seta-sidebar-motoristas');
+  const conteudoSidebarMotoristas = document.getElementById('conteudo-sidebar-motoristas');
 
-  cabecalhoMotoristas.addEventListener('click', (e) => {
-    if (e.target.id === 'btn-novo-motorista') return; // não recolher ao clicar no botão
-    const aberto = listaMotoristasDiv.style.display !== 'none';
-    listaMotoristasDiv.style.display = aberto ? 'none' : 'block';
-    setaMotoristas.style.transform = aberto ? 'rotate(0deg)' : 'rotate(90deg)';
+  cabecalhoSidebarMotoristas.addEventListener('click', () => {
+    const aberto = conteudoSidebarMotoristas.style.display !== 'none';
+    conteudoSidebarMotoristas.style.display = aberto ? 'none' : 'block';
+    setaSidebarMotoristas.style.transform = aberto ? 'rotate(-90deg)' : 'rotate(0deg)';
   });
 
   async function carregarMotoristas() {
@@ -521,7 +526,7 @@
     const { data, error } = await supabaseClient
       .from('agendamentos_coleta')
       .select('placa_veiculo, peso_kg, quantidade_volumes, nome_empresa, qtd_paletes')
-      .eq('data_coleta', dataRef);
+      .eq('previsao_coleta', dataRef);
 
     if (error) {
       resumoPorPlacaDiv.innerHTML = '<span style="color:#6b7280; font-size:13px;">Erro ao carregar resumo.</span>';
@@ -632,7 +637,7 @@
         const { error } = await supabaseClient
           .from('agendamentos_coleta')
           .update({ finalizado: true })
-          .eq('data_coleta', dataRef)
+          .eq('previsao_coleta', dataRef)
           .eq('placa_veiculo', placaClicada);
 
         if (error) {
@@ -658,7 +663,7 @@
     let query = supabaseClient
       .from('agendamentos_coleta')
       .select('*')
-      .order('data_coleta', { ascending: false });
+      .order('previsao_coleta', { ascending: false });
 
     const status = filtroStatus.value;
     if (status) query = query.eq('status', status);
@@ -667,7 +672,7 @@
     if (placa) query = query.eq('placa_veiculo', placa);
 
     const dataFiltro = document.getElementById('filtro-data').value;
-    if (dataFiltro) query = query.eq('data_coleta', dataFiltro);
+    if (dataFiltro) query = query.eq('previsao_coleta', dataFiltro);
 
     const busca = filtroBusca.value.trim();
     if (busca) {
@@ -699,7 +704,8 @@
       <table>
         <thead>
           <tr>
-            <th>Data coleta</th>
+            <th>Data solicitada</th>
+            <th>Previsão de coleta</th>
             <th>Solicitante</th>
             <th>CNPJ</th>
             <th>Empresa</th>
@@ -715,9 +721,14 @@
     `;
 
     for (const row of rows) {
+      const previsaoDiferente = row.previsao_coleta && row.previsao_coleta !== row.data_coleta;
       html += `
         <tr>
           <td>${formatarData(row.data_coleta)}</td>
+          <td>
+            <input type="date" class="previsao-input" data-id="${row.id}" value="${row.previsao_coleta || row.data_coleta}"
+              style="padding:6px 8px; border-radius:6px; border:1px solid ${previsaoDiferente ? '#f59e0b' : '#d1d5db'}; font-size:13px; ${previsaoDiferente ? 'background:#fffbeb; font-weight:600;' : ''}">
+          </td>
           <td>${row.nome_solicitante || '-'}</td>
           <td>${formatarCNPJ(row.cnpj)}</td>
           <td>${row.nome_empresa || '-'}</td>
@@ -746,6 +757,28 @@
     html += '</tbody></table>';
     conteudo.className = '';
     conteudo.innerHTML = html;
+
+    document.querySelectorAll('.previsao-input').forEach(input => {
+      input.addEventListener('change', async (e) => {
+        const id = e.target.dataset.id;
+        const novaData = e.target.value;
+        e.target.disabled = true;
+
+        const { error } = await supabaseClient
+          .from('agendamentos_coleta')
+          .update({ previsao_coleta: novaData })
+          .eq('id', id);
+
+        e.target.disabled = false;
+
+        if (error) {
+          mostrarToast('Não foi possível atualizar a previsão de coleta.', false);
+          console.error(error);
+        } else {
+          mostrarToast('Previsão de coleta atualizada.', true);
+        }
+      });
+    });
 
     document.querySelectorAll('.placa-select').forEach(select => {
       select.addEventListener('change', async (e) => {
