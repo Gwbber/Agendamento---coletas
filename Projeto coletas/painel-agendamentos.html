@@ -33,7 +33,7 @@
     left: max(16px, calc((100vw - 1800px) / 2));
     z-index: 30;
   }
-  .sidebar-esquerda .icone-sidebar-motoristas {
+  .sidebar-esquerda .icone-sidebar {
     width: 44px;
     height: 44px;
     display: flex;
@@ -47,44 +47,31 @@
     box-shadow: 0 1px 3px rgba(0,0,0,0.08);
     transition: transform 0.15s;
   }
-  .sidebar-esquerda .painel-sidebar-motoristas {
+  .sidebar-esquerda .painel-sidebar {
     display: none;
     position: absolute;
     top: 0;
     left: 0;
     width: 280px;
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
     background: #fff;
     border-radius: 12px;
     box-shadow: 0 4px 16px rgba(0,0,0,0.18);
     padding: 18px;
   }
-  .sidebar-esquerda:hover .painel-sidebar-motoristas,
-  .sidebar-esquerda.aberta-fixa .painel-sidebar-motoristas {
+  .sidebar-esquerda:hover .painel-sidebar,
+  .sidebar-esquerda.aberta-fixa .painel-sidebar {
     display: block;
   }
-  .sidebar-esquerda:hover .icone-sidebar-motoristas,
-  .sidebar-esquerda.aberta-fixa .icone-sidebar-motoristas {
+  .sidebar-esquerda:hover .icone-sidebar,
+  .sidebar-esquerda.aberta-fixa .icone-sidebar {
     transform: rotate(180deg);
   }
-  .resumo-card {
-    width: auto;
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-    padding: 12px 14px;
-    position: fixed;
-    top: 20px;
-    right: max(16px, calc((100vw - 1800px) / 2));
-    max-height: calc(100vh - 40px);
-    overflow-y: auto;
-    transition: width 0.15s;
+  .sidebar-resumo {
+    top: 76px;
   }
-  .resumo-card.resumo-aberto {
-    width: 280px;
-    padding: 18px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.18);
-  }
-  .resumo-card h2 {
+  .painel-resumo h2 {
     font-size: 15px;
     margin: 0 0 2px;
   }
@@ -234,9 +221,8 @@
     body { padding: 16px 10px; }
     .layout { flex-direction: column; gap: 16px; padding-left: 0; padding-right: 0; }
     .wrap { flex: 1 1 auto; width: 100%; min-width: 0; }
-    .resumo-card, .resumo-card.resumo-aberto { width: 100%; position: static; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
     .sidebar-esquerda { width: 100%; flex: 0 0 auto; position: static; }
-    .sidebar-esquerda .painel-sidebar-motoristas { width: 100%; top: 44px; }
+    .sidebar-esquerda .painel-sidebar { width: 100%; top: 44px; box-shadow: 0 4px 16px rgba(0,0,0,0.18); }
     h1 { font-size: 19px; }
     .table-card { -webkit-overflow-scrolling: touch; }
   }
@@ -246,8 +232,8 @@
 
 <div class="layout">
 <aside class="sidebar-esquerda" id="sidebar-motoristas">
-  <div class="icone-sidebar-motoristas" id="btn-toggle-sidebar-motoristas" title="Motoristas">▶</div>
-  <div class="painel-sidebar-motoristas">
+  <div class="icone-sidebar" id="btn-toggle-sidebar-motoristas" title="Motoristas">▶</div>
+  <div class="painel-sidebar">
     <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
       <h2 style="margin:0;">Motoristas</h2>
     </div>
@@ -294,22 +280,22 @@
   </div>
 </div>
 
-<aside class="resumo-card" id="aside-resumo">
-  <div id="cabecalho-resumo" style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
-    <span style="display:flex; align-items:center; gap:8px; cursor:pointer; flex:1;" id="toggle-resumo">
-      <span id="seta-resumo" style="display:inline-block; transition:transform 0.15s; font-size:12px;">▶</span>
+<aside class="sidebar-esquerda sidebar-resumo" id="aside-resumo">
+  <div class="icone-sidebar" id="btn-toggle-sidebar-resumo" title="Resumo do dia">▶</div>
+  <div class="painel-sidebar painel-resumo">
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
       <h2 style="margin:0;">Resumo do dia</h2>
-    </span>
-    <button id="btn-refresh-resumo" title="Atualizar resumo" style="border:1px solid #d1d5db; background:#fff; border-radius:6px; width:28px; height:28px; cursor:pointer; font-size:14px; line-height:1;">↻</button>
-  </div>
-  <div id="conteudo-resumo" style="display:none; margin-top:10px;">
-    <input type="date" id="resumo-filtro-data" style="width:100%; padding:8px 10px; border:1px solid #d1d5db; border-radius:8px; font-size:14px; margin-bottom:14px;">
-    <div class="resumo-total-geral">
-      <div>Peso total<strong id="resumo-peso-total">0 kg</strong></div>
-      <div>Volumes<strong id="resumo-volumes-total">0</strong></div>
-      <div>Fornecedores<strong id="resumo-fornecedores-total">0</strong></div>
+      <button id="btn-refresh-resumo" title="Atualizar resumo" style="border:1px solid #d1d5db; background:#fff; border-radius:6px; width:28px; height:28px; cursor:pointer; font-size:14px; line-height:1;">↻</button>
     </div>
-    <div id="resumo-por-placa">Carregando...</div>
+    <div style="margin-top:10px;">
+      <input type="date" id="resumo-filtro-data" style="width:100%; padding:8px 10px; border:1px solid #d1d5db; border-radius:8px; font-size:14px; margin-bottom:14px;">
+      <div class="resumo-total-geral">
+        <div>Peso total<strong id="resumo-peso-total">0 kg</strong></div>
+        <div>Volumes<strong id="resumo-volumes-total">0</strong></div>
+        <div>Fornecedores<strong id="resumo-fornecedores-total">0</strong></div>
+      </div>
+      <div id="resumo-por-placa">Carregando...</div>
+    </div>
   </div>
 </aside>
 </div>
@@ -557,16 +543,16 @@
   }
 
   // ==== RESUMO DO DIA POR PLACA ====
-  const toggleResumo = document.getElementById('toggle-resumo');
-  const setaResumo = document.getElementById('seta-resumo');
-  const conteudoResumo = document.getElementById('conteudo-resumo');
-  const asideResumo = document.getElementById('aside-resumo');
+  const sidebarResumo = document.getElementById('aside-resumo');
+  const btnToggleSidebarResumo = document.getElementById('btn-toggle-sidebar-resumo');
 
-  toggleResumo.addEventListener('click', () => {
-    const aberto = conteudoResumo.style.display !== 'none';
-    conteudoResumo.style.display = aberto ? 'none' : 'block';
-    setaResumo.style.transform = aberto ? 'rotate(0deg)' : 'rotate(90deg)';
-    asideResumo.classList.toggle('resumo-aberto', !aberto);
+  btnToggleSidebarResumo.addEventListener('click', () => {
+    sidebarResumo.classList.toggle('aberta-fixa');
+  });
+  document.addEventListener('click', (e) => {
+    if (!sidebarResumo.contains(e.target)) {
+      sidebarResumo.classList.remove('aberta-fixa');
+    }
   });
 
   const btnRefreshResumo = document.getElementById('btn-refresh-resumo');
