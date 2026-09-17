@@ -22,6 +22,7 @@
     margin: 0 auto;
     flex-wrap: wrap;
     padding-left: 64px;
+    padding-right: 300px;
   }
   .sidebar-esquerda {
     order: -1;
@@ -68,13 +69,15 @@
   }
   .resumo-card {
     width: 280px;
-    flex: 0 0 280px;
     background: #fff;
     border-radius: 12px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.08);
     padding: 18px;
-    position: sticky;
+    position: fixed;
     top: 20px;
+    right: max(16px, calc((100vw - 1800px) / 2));
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
   }
   .resumo-card h2 {
     font-size: 15px;
@@ -224,7 +227,7 @@
   /* ==== RESPONSIVIDADE PARA CELULAR ==== */
   @media (max-width: 768px) {
     body { padding: 16px 10px; }
-    .layout { flex-direction: column; gap: 16px; padding-left: 0; }
+    .layout { flex-direction: column; gap: 16px; padding-left: 0; padding-right: 0; }
     .wrap { flex: 1 1 auto; width: 100%; min-width: 0; }
     .resumo-card { width: 100%; position: static; }
     .sidebar-esquerda { width: 100%; flex: 0 0 auto; position: static; }
