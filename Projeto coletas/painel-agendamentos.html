@@ -303,9 +303,9 @@
 <div id="toast"></div>
 
 <div id="modal-motorista" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); align-items:center; justify-content:center; z-index:50;">
-  <div style="background:#fff; border-radius:12px; padding:24px; max-width:360px; width:90%;">
+  <div id="mot-form-wrap" style="background:#fff; border-radius:12px; padding:24px; max-width:360px; width:90%;">
     <h3 id="mot-titulo" style="margin:0 0 4px; font-size:17px;">Novo motorista</h3>
-    <p id="mot-subtitulo" style="margin:0 0 16px; font-size:13px; color:#6b7280;">Depois de cadastrado, o motorista cria a própria senha na área dele, usando a placa como identificação.</p>
+    <p id="mot-subtitulo" style="margin:0 0 16px; font-size:13px; color:#6b7280;">Uma senha de acesso será gerada automaticamente para o motorista.</p>
     <label style="display:block; font-size:13px; font-weight:600; margin:10px 0 4px;">Nome</label>
     <input type="text" id="mot-nome" style="width:100%; padding:8px 10px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;">
     <label style="display:block; font-size:13px; font-weight:600; margin:10px 0 4px;">Telefone</label>
@@ -319,6 +319,21 @@
       <button id="mot-salvar" style="flex:1; padding:10px; border:none; border-radius:8px; background:#7c3aed; color:#fff; font-size:14px; cursor:pointer;">Salvar</button>
     </div>
   </div>
+  <div id="mot-senha-wrap" style="display:none; background:#fff; border-radius:12px; padding:24px; max-width:360px; width:90%;">
+    <h3 style="margin:0 0 4px; font-size:17px;">Motorista cadastrado!</h3>
+    <p style="margin:0 0 16px; font-size:13px; color:#6b7280;">Anote e repasse esses dados ao motorista. <strong>Esta senha não aparece de novo.</strong></p>
+    <div style="background:#f9fafb; border-radius:8px; padding:14px; font-size:14px;">
+      <div style="margin-bottom:10px;"><span style="color:#6b7280; font-size:12px; display:block;">Placa (login)</span><strong id="mot-senha-placa" style="font-size:16px;"></strong></div>
+      <div>
+        <span style="color:#6b7280; font-size:12px; display:block;">Senha</span>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <strong id="mot-senha-valor" style="font-size:16px; letter-spacing:0.03em;"></strong>
+          <button id="mot-senha-copiar" style="border:1px solid #d1d5db; background:#fff; border-radius:6px; padding:4px 8px; font-size:12px; cursor:pointer;">Copiar</button>
+        </div>
+      </div>
+    </div>
+    <button id="mot-senha-fechar" style="width:100%; margin-top:18px; padding:10px; border:none; border-radius:8px; background:#7c3aed; color:#fff; font-size:14px; cursor:pointer;">Concluir</button>
+  </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -329,6 +344,15 @@
   // =======================
 
   const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  function gerarSenhaTemporaria() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+    const valores = new Uint32Array(10);
+    crypto.getRandomValues(valores);
+    let senha = '';
+    for (let i = 0; i < valores.length; i++) senha += chars[valores[i] % chars.length];
+    return senha;
+  }
 
   // Retorna a data de hoje no formato YYYY-MM-DD, usando o horário local do navegador
   // (evita o bug de toISOString(), que usa UTC e pode "adiantar" o dia perto da meia-noite)
@@ -440,6 +464,8 @@
         document.getElementById('mot-placa-aviso').style.display = 'block';
         document.getElementById('mot-salvar').textContent = 'Salvar alterações';
         motErro.style.display = 'none';
+        document.getElementById('mot-form-wrap').style.display = 'block';
+        document.getElementById('mot-senha-wrap').style.display = 'none';
         modalMotorista.style.display = 'flex';
       });
     });
@@ -450,7 +476,7 @@
   document.getElementById('btn-novo-motorista').addEventListener('click', () => {
     motoristaEditandoId = null;
     document.getElementById('mot-titulo').textContent = 'Novo motorista';
-    document.getElementById('mot-subtitulo').textContent = 'Depois de cadastrado, o motorista cria a própria senha na área dele, usando a placa como identificação.';
+    document.getElementById('mot-subtitulo').textContent = 'Uma senha de acesso será gerada automaticamente para o motorista.';
     document.getElementById('mot-nome').value = '';
     document.getElementById('mot-telefone').value = '';
     document.getElementById('mot-placa').value = '';
@@ -459,6 +485,8 @@
     document.getElementById('mot-placa-aviso').style.display = 'none';
     document.getElementById('mot-salvar').textContent = 'Salvar';
     motErro.style.display = 'none';
+    document.getElementById('mot-form-wrap').style.display = 'block';
+    document.getElementById('mot-senha-wrap').style.display = 'none';
     modalMotorista.style.display = 'flex';
   });
 
@@ -499,21 +527,55 @@
 
     // Cadastro novo
     const emailInterno = `${placa.toLowerCase()}@motorista.coletas.com`;
+    const senhaGerada = gerarSenhaTemporaria();
+
+    document.getElementById('mot-salvar').disabled = true;
+
+    // Cliente à parte, sem persistir sessão: evita substituir a sessão logada da transportadora
+    const clienteAuthTemp = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: { persistSession: false, autoRefreshToken: false }
+    });
+
+    const { error: errorAuth } = await clienteAuthTemp.auth.signUp({
+      email: emailInterno,
+      password: senhaGerada
+    });
+
+    document.getElementById('mot-salvar').disabled = false;
+
+    if (errorAuth) {
+      motErro.textContent = 'Não foi possível criar o acesso do motorista. Verifique se essa placa já não está cadastrada.';
+      motErro.style.display = 'block';
+      console.error(errorAuth);
+      return;
+    }
 
     const { error } = await supabaseClient
       .from('motoristas')
       .insert([{ nome, telefone, placa, email: emailInterno }]);
 
     if (error) {
-      motErro.textContent = 'Não foi possível salvar. Verifique se essa placa já não está cadastrada.';
+      motErro.textContent = 'O acesso foi criado, mas não foi possível salvar o cadastro do motorista.';
       motErro.style.display = 'block';
       console.error(error);
       return;
     }
 
-    modalMotorista.style.display = 'none';
-    mostrarToast('Motorista cadastrado.', true);
+    document.getElementById('mot-form-wrap').style.display = 'none';
+    document.getElementById('mot-senha-wrap').style.display = 'block';
+    document.getElementById('mot-senha-placa').textContent = placa;
+    document.getElementById('mot-senha-valor').textContent = senhaGerada;
+
     await carregarMotoristas();
+  });
+
+  document.getElementById('mot-senha-copiar').addEventListener('click', () => {
+    const senha = document.getElementById('mot-senha-valor').textContent;
+    navigator.clipboard.writeText(senha).then(() => mostrarToast('Senha copiada.', true));
+  });
+
+  document.getElementById('mot-senha-fechar').addEventListener('click', () => {
+    modalMotorista.style.display = 'none';
   });
   // ==================================
 
