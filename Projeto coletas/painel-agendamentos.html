@@ -592,6 +592,17 @@
     modalMotorista.style.display = 'none';
   });
 
+  async function extrairErroFunction(error) {
+    if (!error) return '';
+    try {
+      if (error.context && typeof error.context.json === 'function') {
+        const corpo = await error.context.json();
+        if (corpo && corpo.error) return corpo.error;
+      }
+    } catch (e) { /* segue com a mensagem genérica */ }
+    return error.message || '';
+  }
+
   document.getElementById('mot-definir-senha').addEventListener('click', async () => {
     const novaSenha = document.getElementById('mot-nova-senha').value;
 
@@ -611,9 +622,10 @@
     document.getElementById('mot-definir-senha').disabled = false;
 
     if (error || data?.error) {
-      motErro.textContent = 'Não foi possível alterar a senha. ' + (data?.error || (error && error.message) || '');
+      const mensagem = data?.error || await extrairErroFunction(error);
+      motErro.textContent = 'Não foi possível alterar a senha. ' + mensagem;
       motErro.style.display = 'block';
-      console.error(error || data?.error);
+      console.error(mensagem, error || data?.error);
       return;
     }
 
@@ -635,9 +647,10 @@
     document.getElementById('mot-excluir').disabled = false;
 
     if (error || data?.error) {
-      motErro.textContent = 'Não foi possível excluir. ' + (data?.error || (error && error.message) || '');
+      const mensagem = data?.error || await extrairErroFunction(error);
+      motErro.textContent = 'Não foi possível excluir. ' + mensagem;
       motErro.style.display = 'block';
-      console.error(error || data?.error);
+      console.error(mensagem, error || data?.error);
       return;
     }
 
