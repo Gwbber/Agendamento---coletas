@@ -313,6 +313,16 @@
     <label style="display:block; font-size:13px; font-weight:600; margin:10px 0 4px;">Placa do veículo</label>
     <input type="text" id="mot-placa" placeholder="ABC1D23" style="width:100%; padding:8px 10px; border:1px solid #d1d5db; border-radius:8px; font-size:14px; text-transform:uppercase;">
     <div id="mot-placa-aviso" style="display:none; font-size:11px; color:#9ca3af; margin-top:4px;">A placa não pode ser alterada, pois é usada no login do motorista.</div>
+
+    <div id="mot-acoes-existente" style="display:none; margin-top:18px; padding-top:16px; border-top:1px solid #e5e7eb;">
+      <label style="display:block; font-size:13px; font-weight:600; margin:0 0 4px;">Nova senha</label>
+      <div style="display:flex; gap:8px;">
+        <input type="text" id="mot-nova-senha" placeholder="Mínimo 6 caracteres" style="flex:1; padding:8px 10px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;">
+        <button id="mot-definir-senha" style="padding:8px 12px; border:1px solid #d1d5db; border-radius:8px; background:#fff; font-size:13px; cursor:pointer; white-space:nowrap;">Definir</button>
+      </div>
+      <button id="mot-excluir" style="width:100%; margin-top:14px; padding:10px; border:1px solid #fecaca; border-radius:8px; background:#fef2f2; color:#b91c1c; font-size:14px; cursor:pointer;">Excluir motorista</button>
+    </div>
+
     <div id="mot-erro" style="display:none; color:#dc2626; font-size:12px; margin-top:8px;"></div>
     <div style="display:flex; gap:8px; margin-top:18px;">
       <button id="mot-cancelar" style="flex:1; padding:10px; border:1px solid #d1d5db; border-radius:8px; background:#fff; font-size:14px; cursor:pointer;">Cancelar</button>
@@ -462,6 +472,8 @@
         document.getElementById('mot-placa').readOnly = true;
         document.getElementById('mot-placa').style.background = '#f3f4f6';
         document.getElementById('mot-placa-aviso').style.display = 'block';
+        document.getElementById('mot-acoes-existente').style.display = 'block';
+        document.getElementById('mot-nova-senha').value = '';
         document.getElementById('mot-salvar').textContent = 'Salvar alterações';
         motErro.style.display = 'none';
         document.getElementById('mot-form-wrap').style.display = 'block';
@@ -483,6 +495,8 @@
     document.getElementById('mot-placa').readOnly = false;
     document.getElementById('mot-placa').style.background = '#fff';
     document.getElementById('mot-placa-aviso').style.display = 'none';
+    document.getElementById('mot-acoes-existente').style.display = 'none';
+    document.getElementById('mot-nova-senha').value = '';
     document.getElementById('mot-salvar').textContent = 'Salvar';
     motErro.style.display = 'none';
     document.getElementById('mot-form-wrap').style.display = 'block';
@@ -576,6 +590,60 @@
 
   document.getElementById('mot-senha-fechar').addEventListener('click', () => {
     modalMotorista.style.display = 'none';
+  });
+
+  document.getElementById('mot-definir-senha').addEventListener('click', async () => {
+    const novaSenha = document.getElementById('mot-nova-senha').value;
+
+    if (!novaSenha || novaSenha.length < 6) {
+      motErro.textContent = 'A senha precisa ter pelo menos 6 caracteres.';
+      motErro.style.display = 'block';
+      return;
+    }
+
+    motErro.style.display = 'none';
+    document.getElementById('mot-definir-senha').disabled = true;
+
+    const { data, error } = await supabaseClient.functions.invoke('admin-motorista', {
+      body: { acao: 'alterar_senha', motorista_id: motoristaEditandoId, nova_senha: novaSenha }
+    });
+
+    document.getElementById('mot-definir-senha').disabled = false;
+
+    if (error || data?.error) {
+      motErro.textContent = 'Não foi possível alterar a senha. ' + (data?.error || (error && error.message) || '');
+      motErro.style.display = 'block';
+      console.error(error || data?.error);
+      return;
+    }
+
+    document.getElementById('mot-nova-senha').value = '';
+    mostrarToast('Senha alterada.', true);
+  });
+
+  document.getElementById('mot-excluir').addEventListener('click', async () => {
+    if (!motoristaEditandoId) return;
+    const confirmar = window.confirm('Tem certeza que deseja excluir este motorista? Essa ação não pode ser desfeita.');
+    if (!confirmar) return;
+
+    document.getElementById('mot-excluir').disabled = true;
+
+    const { data, error } = await supabaseClient.functions.invoke('admin-motorista', {
+      body: { acao: 'excluir', motorista_id: motoristaEditandoId }
+    });
+
+    document.getElementById('mot-excluir').disabled = false;
+
+    if (error || data?.error) {
+      motErro.textContent = 'Não foi possível excluir. ' + (data?.error || (error && error.message) || '');
+      motErro.style.display = 'block';
+      console.error(error || data?.error);
+      return;
+    }
+
+    modalMotorista.style.display = 'none';
+    mostrarToast('Motorista excluído.', true);
+    await carregarMotoristas();
   });
   // ==================================
 
