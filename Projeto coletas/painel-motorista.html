@@ -22,6 +22,31 @@
     box-shadow: 0 1px 3px rgba(0,0,0,0.08);
     overflow-x: auto;
   }
+  .resumo-motorista {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+  .resumo-motorista .card-total {
+    flex: 1 1 160px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    padding: 14px 16px;
+  }
+  .resumo-motorista .card-total .rotulo {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: #6b7280;
+    margin: 0 0 4px;
+  }
+  .resumo-motorista .card-total .valor {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0;
+  }
   table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 640px; }
   th {
     text-align: left;
@@ -71,6 +96,21 @@
       <p class="subtitle">Agendamentos atribuídos ao seu veículo.</p>
     </div>
     <button id="btn-sair" style="padding:8px 14px; border:1px solid #d1d5db; border-radius:8px; background:#fff; font-size:14px; cursor:pointer;">Sair</button>
+  </div>
+
+  <div class="resumo-motorista" id="resumo-motorista">
+    <div class="card-total">
+      <p class="rotulo">Empresas</p>
+      <p class="valor" id="resumo-empresas">0</p>
+    </div>
+    <div class="card-total">
+      <p class="rotulo">Volumes</p>
+      <p class="valor" id="resumo-volumes">0</p>
+    </div>
+    <div class="card-total">
+      <p class="rotulo">Peso total</p>
+      <p class="valor" id="resumo-peso">0 kg</p>
+    </div>
   </div>
 
   <div class="table-card">
@@ -134,6 +174,18 @@
     return cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
   }
 
+  let linhasAtuais = [];
+
+  function atualizarResumoMotorista() {
+    const empresas = new Set(linhasAtuais.map(r => r.nome_empresa || '-')).size;
+    const volumes = linhasAtuais.reduce((soma, r) => soma + (Number(r.quantidade_volumes) || 0), 0);
+    const peso = linhasAtuais.reduce((soma, r) => soma + (Number(r.peso_kg) || 0), 0);
+
+    document.getElementById('resumo-empresas').textContent = empresas;
+    document.getElementById('resumo-volumes').textContent = volumes.toLocaleString('pt-BR');
+    document.getElementById('resumo-peso').textContent = peso.toLocaleString('pt-BR') + ' kg';
+  }
+
   async function carregarAgendamentos() {
     conteudo.className = 'loading';
     conteudo.textContent = 'Carregando...';
@@ -153,6 +205,8 @@
     }
 
     if (!data || data.length === 0) {
+      linhasAtuais = [];
+      atualizarResumoMotorista();
       conteudo.className = 'empty';
       conteudo.textContent = 'Nenhuma coleta atribuída a você por enquanto.';
       return;
@@ -161,6 +215,8 @@
     // Ordena pela data que realmente vale (previsão, quando definida pela transportadora)
     data.sort((a, b) => (a.previsao_coleta || a.data_coleta).localeCompare(b.previsao_coleta || b.data_coleta));
 
+    linhasAtuais = data;
+    atualizarResumoMotorista();
     renderizarTabela(data);
   }
 
@@ -229,6 +285,10 @@
         linha.style.backgroundColor = novoStatus === 'coletado'
           ? 'rgba(22,163,74,0.20)'
           : 'rgba(220,38,38,0.06)';
+
+        const linhaObj = linhasAtuais.find(r => String(r.id) === String(id));
+        if (linhaObj) linhaObj.status = novoStatus;
+        atualizarResumoMotorista();
       });
     });
   }
