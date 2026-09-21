@@ -192,10 +192,10 @@
 
     // A RLS do Supabase já garante que só voltam agendamentos da placa deste motorista.
     // Só somem da lista quando a transportadora finalizar (campo "finalizado"), não pelo status marcado aqui.
-    const { data, error } = await supabaseClient
-      .from('agendamentos_coleta')
-      .select('*')
-      .eq('finalizado', false);
+    const [{ data, error }, { data: rotas, error: errorRotas }] = await Promise.all([
+      supabaseClient.from('agendamentos_coleta').select('*').eq('finalizado', false),
+      supabaseClient.from('fornecedores_rota').select('cnpj, nome_exibicao, regiao, rota, ordem')
+    ]);
 
     if (error) {
       conteudo.className = 'empty';
@@ -203,6 +203,12 @@
       console.error(error);
       return;
     }
+
+    if (errorRotas) console.error('Erro ao carregar roteirização:', errorRotas);
+
+    // Mapa CNPJ -> dados de rota, para enriquecer e ordenar as coletas
+    const mapaRotas = {};
+    (rotas || []).forEach(r => { if (r.cnpj) mapaRotas[r.cnpj] = r; });
 
     if (!data || data.length === 0) {
       linhasAtuais = [];
@@ -212,8 +218,21 @@
       return;
     }
 
-    // Ordena pela data que realmente vale (previsão, quando definida pela transportadora)
-    data.sort((a, b) => (a.previsao_coleta || a.data_coleta).localeCompare(b.previsao_coleta || b.data_coleta));
+    data.forEach(row => {
+      const info = mapaRotas[row.cnpj];
+      row._rota_info = info || null;
+      // Coletas sem CNPJ cadastrado na roteirização vão para o final da lista
+      row._rota_num = info ? info.rota : 9999;
+      row._rota_ordem = info ? info.ordem : 9999;
+    });
+
+    // Ordena por rota (crescente) e, dentro da mesma rota, pela ordem definida na planilha.
+    // Sem rota cadastrada, cai no final ordenado pela data (comportamento anterior).
+    data.sort((a, b) => {
+      if (a._rota_num !== b._rota_num) return a._rota_num - b._rota_num;
+      if (a._rota_ordem !== b._rota_ordem) return a._rota_ordem - b._rota_ordem;
+      return (a.previsao_coleta || a.data_coleta).localeCompare(b.previsao_coleta || b.data_coleta);
+    });
 
     linhasAtuais = data;
     atualizarResumoMotorista();
@@ -225,6 +244,7 @@
       <table>
         <thead>
           <tr>
+            <th>Rota</th>
             <th>Data coleta</th>
             <th>Empresa</th>
             <th>CNPJ</th>
@@ -236,14 +256,29 @@
         <tbody>
     `;
 
+    let rotaAnterior = null;
+
     for (const row of rows) {
+      const info = row._rota_info;
+
+      if (row._rota_num !== rotaAnterior) {
+        rotaAnterior = row._rota_num;
+        const tituloRota = info ? `Rota ${info.rota}${info.regiao ? ' — ' + info.regiao : ''}` : 'Sem rota definida';
+        html += `<tr><td colspan="7" style="background:#f9fafb; font-weight:700; font-size:13px; padding:10px 14px; border-bottom:1px solid #e5e7eb;">${tituloRota}</td></tr>`;
+      }
+
       const corLinha = row.status === 'coletado'
         ? 'background-color: rgba(22,163,74,0.20);'
         : 'background-color: rgba(220,38,38,0.06);';
+      const nomeExibicao = info ? info.nome_exibicao : (row.nome_empresa || '-');
+      const nomeSecundario = (info && info.nome_exibicao !== row.nome_empresa && row.nome_empresa)
+        ? `<div style="font-size:11px; color:#9ca3af;">${row.nome_empresa}</div>` : '';
+
       html += `
         <tr data-row-id="${row.id}" style="${corLinha} transition: background-color 0.4s;">
+          <td>${info ? info.rota : '-'}</td>
           <td>${formatarData(row.previsao_coleta || row.data_coleta)}</td>
-          <td>${row.nome_empresa || '-'}</td>
+          <td>${nomeExibicao}${nomeSecundario}</td>
           <td>${formatarCNPJ(row.cnpj)}</td>
           <td>${row.quantidade_volumes ?? '-'}</td>
           <td>${row.peso_kg ?? '-'}</td>
