@@ -244,7 +244,6 @@
       <table>
         <thead>
           <tr>
-            <th>Rota</th>
             <th>Data coleta</th>
             <th>Empresa</th>
             <th>CNPJ</th>
@@ -264,7 +263,7 @@
       if (row._rota_num !== rotaAnterior) {
         rotaAnterior = row._rota_num;
         const tituloRota = info ? `Rota ${info.rota}${info.regiao ? ' — ' + info.regiao : ''}` : 'Sem rota definida';
-        html += `<tr><td colspan="7" style="background:#f9fafb; font-weight:700; font-size:13px; padding:10px 14px; border-bottom:1px solid #e5e7eb;">${tituloRota}</td></tr>`;
+        html += `<tr><td colspan="6" style="background:#f9fafb; font-weight:700; font-size:13px; padding:10px 14px; border-bottom:1px solid #e5e7eb;">${tituloRota}</td></tr>`;
       }
 
       const corLinha = row.status === 'coletado'
@@ -276,7 +275,6 @@
 
       html += `
         <tr data-row-id="${row.id}" style="${corLinha} transition: background-color 0.4s;">
-          <td>${info ? info.rota : '-'}</td>
           <td>${formatarData(row.previsao_coleta || row.data_coleta)}</td>
           <td>${nomeExibicao}${nomeSecundario}</td>
           <td>${formatarCNPJ(row.cnpj)}</td>
