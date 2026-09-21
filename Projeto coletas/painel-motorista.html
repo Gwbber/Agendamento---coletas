@@ -176,10 +176,58 @@
 
   let linhasAtuais = [];
 
+  // Une em um só "cartão" as coletas que são do mesmo fornecedor (mesmo nome padrão
+  // da roteirização, ou mesmo CNPJ quando não há roteirização cadastrada), somando
+  // volumes/peso/paletes. Fica "Coletado" só quando TODAS as coletas do grupo estiverem.
+  function agruparColetas(rows) {
+    const grupos = new Map();
+
+    for (const row of rows) {
+      const info = row._rota_info;
+      const dataRow = row.previsao_coleta || row.data_coleta;
+      const chave = (info ? `nome:${info.nome_exibicao}` : `cnpj:${row.cnpj || row.id}`) + `|data:${dataRow}`;
+
+      if (!grupos.has(chave)) {
+        grupos.set(chave, {
+          ids: [],
+          cnpjs: [],
+          nome_empresa: row.nome_empresa,
+          _rota_info: info,
+          _rota_num: row._rota_num,
+          _rota_ordem: row._rota_ordem,
+          previsao_coleta: row.previsao_coleta,
+          data_coleta: row.data_coleta,
+          volumes: 0,
+          peso: 0,
+          paletes: 0,
+          status: 'coletado'
+        });
+      }
+
+      const g = grupos.get(chave);
+      g.ids.push(row.id);
+      if (row.cnpj && !g.cnpjs.includes(row.cnpj)) g.cnpjs.push(row.cnpj);
+      g.volumes += Number(row.quantidade_volumes) || 0;
+      g.peso += Number(row.peso_kg) || 0;
+      g.paletes += Number(row.qtd_paletes) || 0;
+      if (row.status !== 'coletado') g.status = 'pendente';
+
+      const dataAtual = row.previsao_coleta || row.data_coleta;
+      const dataGrupo = g.previsao_coleta || g.data_coleta;
+      if (dataAtual && (!dataGrupo || dataAtual < dataGrupo)) {
+        g.previsao_coleta = row.previsao_coleta;
+        g.data_coleta = row.data_coleta;
+      }
+    }
+
+    return Array.from(grupos.values());
+  }
+
   function atualizarResumoMotorista() {
-    const empresas = new Set(linhasAtuais.map(r => r.nome_empresa || '-')).size;
-    const volumes = linhasAtuais.reduce((soma, r) => soma + (Number(r.quantidade_volumes) || 0), 0);
-    const peso = linhasAtuais.reduce((soma, r) => soma + (Number(r.peso_kg) || 0), 0);
+    const grupos = agruparColetas(linhasAtuais);
+    const empresas = grupos.length;
+    const volumes = grupos.reduce((soma, g) => soma + g.volumes, 0);
+    const peso = grupos.reduce((soma, g) => soma + g.peso, 0);
 
     document.getElementById('resumo-empresas').textContent = empresas;
     document.getElementById('resumo-volumes').textContent = volumes.toLocaleString('pt-BR');
@@ -236,10 +284,10 @@
 
     linhasAtuais = data;
     atualizarResumoMotorista();
-    renderizarTabela(data);
+    renderizarTabela(agruparColetas(data));
   }
 
-  function renderizarTabela(rows) {
+  function renderizarTabela(grupos) {
     let html = `
       <table>
         <thead>
@@ -257,33 +305,37 @@
 
     let rotaAnterior = null;
 
-    for (const row of rows) {
-      const info = row._rota_info;
+    for (const grupo of grupos) {
+      const info = grupo._rota_info;
 
-      if (row._rota_num !== rotaAnterior) {
-        rotaAnterior = row._rota_num;
+      if (grupo._rota_num !== rotaAnterior) {
+        rotaAnterior = grupo._rota_num;
         const tituloRota = info ? `Rota ${info.rota}${info.regiao ? ' — ' + info.regiao : ''}` : 'Sem rota definida';
         html += `<tr><td colspan="6" style="background:#f9fafb; font-weight:700; font-size:13px; padding:10px 14px; border-bottom:1px solid #e5e7eb;">${tituloRota}</td></tr>`;
       }
 
-      const corLinha = row.status === 'coletado'
+      const corLinha = grupo.status === 'coletado'
         ? 'background-color: rgba(22,163,74,0.20);'
         : 'background-color: rgba(220,38,38,0.06);';
-      const nomeExibicao = info ? info.nome_exibicao : (row.nome_empresa || '-');
-      const nomeSecundario = (info && info.nome_exibicao !== row.nome_empresa && row.nome_empresa)
-        ? `<div style="font-size:11px; color:#9ca3af;">${row.nome_empresa}</div>` : '';
+      const nomeExibicao = info ? info.nome_exibicao : (grupo.nome_empresa || '-');
+      const nomeSecundario = (info && info.nome_exibicao !== grupo.nome_empresa && grupo.nome_empresa)
+        ? `<div style="font-size:11px; color:#9ca3af;">${grupo.nome_empresa}</div>` : '';
+      const cnpjExibicao = grupo.cnpjs.length > 1
+        ? grupo.cnpjs.map(formatarCNPJ).join(' / ')
+        : formatarCNPJ(grupo.cnpjs[0]);
+      const idsAttr = grupo.ids.join(',');
 
       html += `
-        <tr data-row-id="${row.id}" style="${corLinha} transition: background-color 0.4s;">
-          <td>${formatarData(row.previsao_coleta || row.data_coleta)}</td>
+        <tr data-ids="${idsAttr}" style="${corLinha} transition: background-color 0.4s;">
+          <td>${formatarData(grupo.previsao_coleta || grupo.data_coleta)}</td>
           <td>${nomeExibicao}${nomeSecundario}</td>
-          <td>${formatarCNPJ(row.cnpj)}</td>
-          <td>${row.quantidade_volumes ?? '-'}</td>
-          <td>${row.peso_kg ?? '-'}</td>
+          <td style="white-space:normal;">${cnpjExibicao}</td>
+          <td>${grupo.volumes || '-'}</td>
+          <td>${grupo.peso || '-'}</td>
           <td>
-            <select class="status-select" data-id="${row.id}">
-              <option value="pendente" ${row.status !== 'coletado' ? 'selected' : ''}>Pendente</option>
-              <option value="coletado" ${row.status === 'coletado' ? 'selected' : ''}>Coletado</option>
+            <select class="status-select" data-ids="${idsAttr}">
+              <option value="pendente" ${grupo.status !== 'coletado' ? 'selected' : ''}>Pendente</option>
+              <option value="coletado" ${grupo.status === 'coletado' ? 'selected' : ''}>Coletado</option>
             </select>
           </td>
         </tr>
@@ -296,7 +348,7 @@
 
     document.querySelectorAll('.status-select').forEach(select => {
       select.addEventListener('change', async (e) => {
-        const id = e.target.dataset.id;
+        const ids = e.target.dataset.ids.split(',');
         const novoStatus = e.target.value;
         const linha = e.target.closest('tr');
         e.target.disabled = true;
@@ -304,7 +356,7 @@
         const { error } = await supabaseClient
           .from('agendamentos_coleta')
           .update({ status: novoStatus })
-          .eq('id', id);
+          .in('id', ids);
 
         e.target.disabled = false;
 
@@ -319,8 +371,10 @@
           ? 'rgba(22,163,74,0.20)'
           : 'rgba(220,38,38,0.06)';
 
-        const linhaObj = linhasAtuais.find(r => String(r.id) === String(id));
-        if (linhaObj) linhaObj.status = novoStatus;
+        ids.forEach(id => {
+          const linhaObj = linhasAtuais.find(r => String(r.id) === String(id));
+          if (linhaObj) linhaObj.status = novoStatus;
+        });
         atualizarResumoMotorista();
       });
     });
