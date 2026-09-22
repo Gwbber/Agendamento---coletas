@@ -162,6 +162,7 @@
     border-collapse: collapse;
     font-size: 14px;
     min-width: 800px;
+    table-layout: fixed;
   }
   th {
     text-align: left;
@@ -172,11 +173,29 @@
     color: #6b7280;
     border-bottom: 1px solid #e5e7eb;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   td {
     padding: 12px 14px;
     border-bottom: 1px solid #f0f1f3;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .col-resize-handle {
+    position: absolute;
+    top: 0;
+    right: -3px;
+    width: 7px;
+    height: 100%;
+    cursor: col-resize;
+    user-select: none;
+    z-index: 5;
+  }
+  .col-resize-handle:hover,
+  .col-resize-handle.redimensionando {
+    background: rgba(124,58,237,0.35);
   }
   tr:last-child td { border-bottom: none; }
   select.status-select, select.placa-select {
@@ -685,6 +704,35 @@
   // ==================================
 
   const conteudo = document.getElementById('conteudo');
+
+  // Redimensionar colunas: delegado no container (sobrevive aos re-renders da tabela)
+  conteudo.addEventListener('mousedown', (e) => {
+    if (!e.target.classList.contains('col-resize-handle')) return;
+    e.preventDefault();
+
+    const handle = e.target;
+    const th = handle.closest('th');
+    const campo = th.dataset.col;
+    const larguraInicial = th.offsetWidth;
+    const xInicial = e.pageX;
+
+    handle.classList.add('redimensionando');
+    document.body.style.userSelect = 'none';
+
+    function aoMover(eMove) {
+      const novaLargura = Math.max(50, larguraInicial + (eMove.pageX - xInicial));
+      th.style.width = novaLargura + 'px';
+      larguraColunas[campo] = novaLargura;
+    }
+    function aoSoltar() {
+      handle.classList.remove('redimensionando');
+      document.body.style.userSelect = '';
+      document.removeEventListener('mousemove', aoMover);
+      document.removeEventListener('mouseup', aoSoltar);
+    }
+    document.addEventListener('mousemove', aoMover);
+    document.addEventListener('mouseup', aoSoltar);
+  });
   const filtroStatus = document.getElementById('filtro-status');
   const filtroBusca = document.getElementById('filtro-busca');
   const btnAtualizar = document.getElementById('btn-atualizar');
@@ -955,12 +1003,22 @@
     ordenarERenderizar();
   }
 
+  let larguraColunas = {};
+
+  function estiloLargura(campo) {
+    return larguraColunas[campo] ? `width:${larguraColunas[campo]}px;` : '';
+  }
+
   function rotuloOrdenavel(campo, texto) {
     let seta = '<span style="opacity:0.25;">↕</span>';
     if (ordenacaoAtual.campo === campo) {
       seta = ordenacaoAtual.asc ? '<span>↑</span>' : '<span>↓</span>';
     }
-    return `<th class="th-ordenavel" data-campo="${campo}" style="cursor:pointer; user-select:none; white-space:nowrap;">${texto} ${seta}</th>`;
+    return `<th class="th-ordenavel" data-campo="${campo}" data-col="${campo}" style="${estiloLargura(campo)}cursor:pointer; user-select:none; white-space:nowrap; position:relative;">${texto} ${seta}<span class="col-resize-handle"></span></th>`;
+  }
+
+  function thFixo(campo, texto) {
+    return `<th data-col="${campo}" style="${estiloLargura(campo)}position:relative;">${texto}<span class="col-resize-handle"></span></th>`;
   }
 
   function renderizarTabela(rows) {
@@ -978,7 +1036,7 @@
             ${rotuloOrdenavel('quantidade_volumes', 'Volumes')}
             ${rotuloOrdenavel('peso_kg', 'Peso (kg)')}
             ${rotuloOrdenavel('qtd_paletes', 'Paletes')}
-            <th>Obs.</th>
+            ${thFixo('observacoes', 'Obs.')}
             ${rotuloOrdenavel('placa_veiculo', 'Placa/Motorista')}
             ${rotuloOrdenavel('status', 'Status')}
           </tr>
@@ -1046,7 +1104,8 @@
     });
 
     document.querySelectorAll('.th-ordenavel').forEach(th => {
-      th.addEventListener('click', () => {
+      th.addEventListener('click', (e) => {
+        if (e.target.classList.contains('col-resize-handle')) return;
         const campo = th.dataset.campo;
         if (ordenacaoAtual.campo === campo) {
           ordenacaoAtual.asc = !ordenacaoAtual.asc;
