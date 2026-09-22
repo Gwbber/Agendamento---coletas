@@ -213,10 +213,12 @@
     font-weight: 600;
   }
   .st-pendente { background: #fef3c7; color: #92400e; }
+  .st-reagendar { background: #fef3c7; color: #92400e; }
   .st-confirmado { background: #ede9fe; color: #5b21b6; }
   .st-coletado { background: #d1fae5; color: #065f46; }
   .st-cancelado { background: #fee2e2; color: #991b1b; }
   tr.linha-pendente td { background: rgba(234,179,8,0.12); }
+  tr.linha-reagendar td { background: rgba(234,179,8,0.12); }
   tr.linha-confirmado td { background: rgba(37,99,235,0.10); }
   tr.linha-coletado td { background: rgba(22,163,74,0.12); }
   tr.linha-cancelado td { background: rgba(220,38,38,0.10); }
@@ -305,6 +307,7 @@
     <select id="filtro-status">
       <option value="">Todos os status</option>
       <option value="pendente">Pendente</option>
+      <option value="reagendar">Reagendar coleta</option>
       <option value="confirmado">Confirmado</option>
       <option value="coletado">Coletado</option>
       <option value="cancelado">Cancelado</option>
@@ -1074,6 +1077,7 @@
           <td>
             <select class="status-select" data-id="${row.id}">
               <option value="pendente" ${row.status === 'pendente' ? 'selected' : ''}>Pendente</option>
+              <option value="reagendar" ${row.status === 'reagendar' ? 'selected' : ''}>Reagendar coleta</option>
               <option value="confirmado" ${row.status === 'confirmado' ? 'selected' : ''}>Confirmado</option>
               <option value="coletado" ${row.status === 'coletado' ? 'selected' : ''}>Coletado</option>
               <option value="cancelado" ${row.status === 'cancelado' ? 'selected' : ''}>Cancelado</option>
