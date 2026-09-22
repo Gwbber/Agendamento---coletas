@@ -210,6 +210,7 @@
       g.volumes += Number(row.quantidade_volumes) || 0;
       g.peso += Number(row.peso_kg) || 0;
       g.paletes += Number(row.qtd_paletes) || 0;
+      if (row.status === 'reagendar') g.temReagendar = true;
       if (row.status !== 'coletado') g.status = 'pendente';
 
       const dataAtual = row.previsao_coleta || row.data_coleta;
@@ -220,7 +221,12 @@
       }
     }
 
-    return Array.from(grupos.values());
+    // "Reagendar" tem prioridade sobre "Pendente": se qualquer item do grupo
+    // precisar de reagendamento, o cartão inteiro aparece assim pro motorista.
+    return Array.from(grupos.values()).map(g => {
+      if (g.temReagendar) g.status = 'reagendar';
+      return g;
+    });
   }
 
   function atualizarResumoMotorista() {
@@ -287,6 +293,12 @@
     renderizarTabela(agruparColetas(data));
   }
 
+  function corDeFundoStatus(status) {
+    if (status === 'coletado') return 'rgba(22,163,74,0.20)';
+    if (status === 'reagendar') return 'rgba(220,38,38,0.28)';
+    return 'rgba(220,38,38,0.06)';
+  }
+
   function renderizarTabela(grupos) {
     let html = `
       <table>
@@ -314,9 +326,7 @@
         html += `<tr><td colspan="6" style="background:#f9fafb; font-weight:700; font-size:13px; padding:10px 14px; border-bottom:1px solid #e5e7eb;">${tituloRota}</td></tr>`;
       }
 
-      const corLinha = grupo.status === 'coletado'
-        ? 'background-color: rgba(22,163,74,0.20);'
-        : 'background-color: rgba(220,38,38,0.06);';
+      const corLinha = `background-color: ${corDeFundoStatus(grupo.status)};`;
       const nomeExibicao = info ? info.nome_exibicao : (grupo.nome_empresa || '-');
       const nomeSecundario = (info && info.nome_exibicao !== grupo.nome_empresa && grupo.nome_empresa)
         ? `<div style="font-size:11px; color:#9ca3af;">${grupo.nome_empresa}</div>` : '';
@@ -334,7 +344,8 @@
           <td>${grupo.peso || '-'}</td>
           <td>
             <select class="status-select" data-ids="${idsAttr}">
-              <option value="pendente" ${grupo.status !== 'coletado' ? 'selected' : ''}>Pendente</option>
+              <option value="pendente" ${grupo.status === 'pendente' ? 'selected' : ''}>Pendente</option>
+              <option value="reagendar" ${grupo.status === 'reagendar' ? 'selected' : ''}>Reagendar coleta</option>
               <option value="coletado" ${grupo.status === 'coletado' ? 'selected' : ''}>Coletado</option>
             </select>
           </td>
@@ -367,9 +378,7 @@
         }
 
         mostrarToast('Status atualizado.', true);
-        linha.style.backgroundColor = novoStatus === 'coletado'
-          ? 'rgba(22,163,74,0.20)'
-          : 'rgba(220,38,38,0.06)';
+        linha.style.backgroundColor = corDeFundoStatus(novoStatus);
 
         ids.forEach(id => {
           const linhaObj = linhasAtuais.find(r => String(r.id) === String(id));
