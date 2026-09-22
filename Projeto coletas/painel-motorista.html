@@ -310,7 +310,7 @@
 
       if (grupo._rota_num !== rotaAnterior) {
         rotaAnterior = grupo._rota_num;
-        const tituloRota = info ? `Rota ${info.rota}${info.regiao ? ' — ' + info.regiao : ''}` : 'Sem rota definida';
+        const tituloRota = info ? (info.regiao ? `— ${info.regiao}` : 'Sem região definida') : 'Sem rota definida';
         html += `<tr><td colspan="6" style="background:#f9fafb; font-weight:700; font-size:13px; padding:10px 14px; border-bottom:1px solid #e5e7eb;">${tituloRota}</td></tr>`;
       }
 
