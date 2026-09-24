@@ -175,6 +175,17 @@
     cursor: pointer;
   }
   .toolbar button:hover { background: rgba(255,255,255,0.16); }
+  .btn-glass {
+    padding: 8px 14px;
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 8px;
+    background: rgba(255,255,255,0.08);
+    color: #f5f3ff;
+    font-size: 14px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .btn-glass:hover { background: rgba(255,255,255,0.16); }
   .table-card {
     background: linear-gradient(180deg, rgba(255,255,255,0.1), rgba(255,255,255,0.04));
     backdrop-filter: blur(16px);
@@ -371,9 +382,9 @@
     </div>
     <div style="display:flex; gap:8px; flex-wrap:wrap;">
       <a href="motorista-login.html" style="text-decoration:none;">
-        <button style="padding:8px 14px; border:1px solid #d1d5db; border-radius:8px; background:#fff; font-size:14px; cursor:pointer; white-space:nowrap;">Área do motorista</button>
+        <button class="btn-glass">Área do motorista</button>
       </a>
-      <button id="btn-sair" style="padding:8px 14px; border:1px solid #d1d5db; border-radius:8px; background:#fff; font-size:14px; cursor:pointer;">Sair</button>
+      <button id="btn-sair" class="btn-glass">Sair</button>
     </div>
   </div>
 
