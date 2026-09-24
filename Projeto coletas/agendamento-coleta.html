@@ -8,18 +8,27 @@
   * { box-sizing: border-box; }
   body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-    background: #f4f5f7;
     margin: 0;
     padding: 60px 16px 24px;
-    color: #1f2328;
+    color: #f5f3ff;
+    background: #0a0713;
+    background-image:
+      radial-gradient(ellipse 60% 45% at 50% 0%, rgba(168,120,255,0.4), transparent 60%),
+      radial-gradient(ellipse 55% 40% at 8% 100%, rgba(124,58,237,0.28), transparent 65%),
+      radial-gradient(ellipse 55% 40% at 95% 100%, rgba(76,29,149,0.32), transparent 65%);
+    background-repeat: no-repeat;
+    background-attachment: fixed;
   }
   .card {
     max-width: 480px;
     margin: 0 auto;
-    background: #ffffff;
+    background: linear-gradient(180deg, rgba(255,255,255,0.1), rgba(255,255,255,0.04));
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255,255,255,0.14);
     border-radius: 12px;
     padding: 28px 24px 32px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.35);
   }
   .logo {
     display: block;
@@ -30,10 +39,11 @@
     font-size: 20px;
     margin: 0 0 4px;
     text-align: center;
+    color: #f5f3ff;
   }
   p.subtitle {
     font-size: 14px;
-    color: #6b7280;
+    color: rgba(245,243,255,0.6);
     text-align: center;
     margin: 0 0 24px;
   }
@@ -42,35 +52,39 @@
     font-size: 13px;
     font-weight: 600;
     margin: 16px 0 6px;
-    color: #374151;
+    color: rgba(245,243,255,0.75);
   }
   input, textarea {
     width: 100%;
     padding: 10px 12px;
     font-size: 15px;
-    border: 1px solid #d1d5db;
+    border: 1px solid rgba(255,255,255,0.2);
     border-radius: 8px;
-    background: #fff;
+    background: rgba(255,255,255,0.06);
+    color: #f5f3ff;
     font-family: inherit;
     resize: vertical;
   }
+  input::placeholder, textarea::placeholder {
+    color: rgba(245,243,255,0.35);
+  }
   input:focus, textarea:focus {
     outline: none;
-    border-color: #7c3aed;
-    box-shadow: 0 0 0 3px rgba(124,58,237,0.15);
+    border-color: #a878ff;
+    box-shadow: 0 0 0 3px rgba(168,120,255,0.25);
   }
   input[readonly] {
-    background: #f3f4f6;
-    color: #6b7280;
+    background: rgba(255,255,255,0.03);
+    color: rgba(245,243,255,0.45);
   }
   .hint {
     font-size: 12px;
-    color: #9ca3af;
+    color: rgba(245,243,255,0.45);
     margin-top: 4px;
   }
   .error {
     font-size: 12px;
-    color: #dc2626;
+    color: #fca5a5;
     margin-top: 4px;
     display: none;
   }
@@ -88,13 +102,13 @@
     font-size: 15px;
     font-weight: 600;
     color: #fff;
-    background: #7c3aed;
+    background: linear-gradient(135deg, #7c3aed, #a878ff);
     border: none;
     border-radius: 8px;
     cursor: pointer;
   }
   button:disabled {
-    background: #c4b5fd;
+    background: rgba(124,58,237,0.4);
     cursor: not-allowed;
   }
   #status-msg {
@@ -105,8 +119,8 @@
     padding: 10px;
     border-radius: 8px;
   }
-  .status-ok { background: #ecfdf5; color: #047857; }
-  .status-fail { background: #fef2f2; color: #b91c1c; }
+  .status-ok { background: rgba(16,185,129,0.15); color: #6ee7b7; }
+  .status-fail { background: rgba(220,38,38,0.15); color: #fca5a5; }
   .spinner {
     display: inline-block;
     width: 12px;
@@ -173,9 +187,9 @@
   <div id="status-msg"></div>
 
   <div style="text-align:center; margin-top:20px; display:flex; justify-content:center; gap:16px; flex-wrap:wrap;">
-    <a href="consulta-status.html" style="font-size:13px; color:#9ca3af; text-decoration:none;">Consulta coleta</a>
-    <a href="motorista-login.html" style="font-size:13px; color:#9ca3af; text-decoration:none;">Área do motorista</a>
-    <a href="login.html" style="font-size:13px; color:#9ca3af; text-decoration:none;">Área da transportadora</a>
+    <a href="consulta-status.html" style="font-size:13px; color:rgba(245,243,255,0.5); text-decoration:none;">Consulta coleta</a>
+    <a href="motorista-login.html" style="font-size:13px; color:rgba(245,243,255,0.5); text-decoration:none;">Área do motorista</a>
+    <a href="login.html" style="font-size:13px; color:rgba(245,243,255,0.5); text-decoration:none;">Área da transportadora</a>
   </div>
 </div>
 
