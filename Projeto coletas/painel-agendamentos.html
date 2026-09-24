@@ -227,11 +227,32 @@
   }
   tr:last-child td { border-bottom: none; }
   select.status-select, select.placa-select {
-    padding: 6px 8px;
-    border-radius: 6px;
-    border: 1px solid #d1d5db;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.08);
+    color: #f5f3ff;
     font-size: 13px;
     font-weight: 600;
+    cursor: pointer;
+  }
+  select.status-select:hover, select.placa-select:hover { background: rgba(255,255,255,0.16); }
+  select.status-select option, select.placa-select option { color: #1f2328; }
+  .previsao-input {
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.08);
+    color: #f5f3ff;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    color-scheme: dark;
+  }
+  .previsao-input:hover { background: rgba(255,255,255,0.16); }
+  .previsao-input.previsao-diferente {
+    border-color: #f59e0b;
+    background: rgba(245,158,11,0.18);
   }
   .badge {
     display: inline-block;
@@ -1081,8 +1102,7 @@
         <tr class="linha-${row.status}" data-id="${row.id}">
           <td>${formatarData(row.data_coleta)}</td>
           <td>
-            <input type="date" class="previsao-input" data-id="${row.id}" value="${row.previsao_coleta || row.data_coleta}"
-              style="padding:6px 8px; border-radius:6px; border:1px solid ${previsaoDiferente ? '#f59e0b' : '#d1d5db'}; font-size:13px; ${previsaoDiferente ? 'background:#fffbeb; font-weight:600;' : ''}">
+            <input type="date" class="previsao-input${previsaoDiferente ? ' previsao-diferente' : ''}" data-id="${row.id}" value="${row.previsao_coleta || row.data_coleta}">
           </td>
           <td>${row.nome_solicitante || '-'}</td>
           <td>${formatarCNPJ(row.cnpj)}</td>
