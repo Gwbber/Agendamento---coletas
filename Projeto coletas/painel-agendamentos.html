@@ -27,47 +27,19 @@
     max-width: 1800px;
     margin: 0 auto;
     flex-wrap: wrap;
-    padding-left: 64px;
   }
-  .sidebar-esquerda {
+  .coluna-lateral {
     order: -1;
-    width: 44px;
-    padding: 0;
-    overflow: visible;
-    position: fixed;
-    top: 20px;
-    left: max(16px, calc((100vw - 1800px) / 2));
-    z-index: 30;
-  }
-  .sidebar-esquerda:hover,
-  .sidebar-esquerda.aberta-fixa {
-    z-index: 40;
-  }
-  .sidebar-esquerda .icone-sidebar {
-    width: 44px;
-    height: 44px;
     display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    font-size: 15px;
-    color: rgba(245,243,255,0.7);
-    background: linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.04));
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255,255,255,0.16);
-    border-radius: 12px;
-    box-shadow: 0 4px 14px rgba(0,0,0,0.3);
-    transition: transform 0.15s;
+    flex-direction: column;
+    gap: 16px;
+    flex: 0 0 auto;
+    align-self: flex-start;
+    position: sticky;
+    top: 20px;
   }
-  .sidebar-esquerda .painel-sidebar {
-    display: none;
-    position: absolute;
-    top: 0;
-    left: 0;
+  .painel-lateral {
     width: 280px;
-    max-height: calc(100vh - 40px);
-    overflow-y: auto;
     color: #f5f3ff;
     background: linear-gradient(180deg, rgba(30,20,45,0.75), rgba(20,14,32,0.7));
     backdrop-filter: blur(20px);
@@ -75,18 +47,48 @@
     border: 1px solid rgba(255,255,255,0.16);
     border-radius: 12px;
     box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-    padding: 18px;
+    overflow: hidden;
+    transition: width 0.22s ease;
   }
-  .sidebar-esquerda:hover .painel-sidebar,
-  .sidebar-esquerda.aberta-fixa .painel-sidebar {
-    display: block;
+  .painel-lateral-toggle {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 13px 14px;
+    background: none;
+    border: none;
+    color: #f5f3ff;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    text-align: left;
   }
-  .sidebar-esquerda:hover .icone-sidebar,
-  .sidebar-esquerda.aberta-fixa .icone-sidebar {
-    transform: rotate(180deg);
+  .painel-lateral-toggle .pl-icone { font-size: 16px; flex: 0 0 auto; line-height: 1; }
+  .painel-lateral-toggle .pl-titulo { flex: 1 1 auto; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .painel-lateral-toggle .pl-chevron {
+    font-size: 13px;
+    color: rgba(245,243,255,0.55);
+    flex: 0 0 auto;
+    transition: transform 0.2s;
   }
-  .sidebar-resumo {
-    top: 76px;
+  .painel-lateral-corpo {
+    padding: 0 14px 16px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    margin-top: 2px;
+    padding-top: 12px;
+  }
+  .painel-lateral.recolhido {
+    width: 48px;
+  }
+  .painel-lateral.recolhido .painel-lateral-toggle {
+    justify-content: center;
+    padding: 13px 0;
+  }
+  .painel-lateral.recolhido .pl-titulo,
+  .painel-lateral.recolhido .pl-chevron,
+  .painel-lateral.recolhido .painel-lateral-corpo {
+    display: none;
   }
   .painel-resumo h2 {
     font-size: 15px;
@@ -292,8 +294,8 @@
     body { padding: 16px 10px; }
     .layout { flex-direction: column; gap: 16px; padding-left: 0; padding-right: 0; }
     .wrap { flex: 1 1 auto; width: 100%; min-width: 0; }
-    .sidebar-esquerda { width: 100%; flex: 0 0 auto; position: static; }
-    .sidebar-esquerda .painel-sidebar { width: 100%; top: 44px; box-shadow: 0 4px 16px rgba(0,0,0,0.18); }
+    .coluna-lateral { width: 100%; position: static; }
+    .painel-lateral { width: 100% !important; }
     h1 { font-size: 19px; }
     .table-card { -webkit-overflow-scrolling: touch; }
   }
@@ -302,18 +304,43 @@
 <body>
 
 <div class="layout">
-<aside class="sidebar-esquerda" id="sidebar-motoristas">
-  <div class="icone-sidebar" id="btn-toggle-sidebar-motoristas" title="Motoristas">▶</div>
-  <div class="painel-sidebar">
-    <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
-      <h2 style="margin:0;">Motoristas</h2>
-    </div>
-    <div style="margin-top:12px;">
+<div class="coluna-lateral">
+<aside class="painel-lateral" id="painel-motoristas">
+  <button type="button" class="painel-lateral-toggle" id="btn-toggle-sidebar-motoristas" title="Motoristas">
+    <span class="pl-icone">🚚</span>
+    <span class="pl-titulo">Motoristas</span>
+    <span class="pl-chevron">‹</span>
+  </button>
+  <div class="painel-lateral-corpo">
+    <div style="margin-top:0;">
       <button id="btn-novo-motorista" style="width:100%; padding:8px; border:1px solid #d1d5db; border-radius:8px; background:#fff; font-size:13px; cursor:pointer; margin-bottom:12px;">+ Novo motorista</button>
       <div id="lista-motoristas">Carregando...</div>
     </div>
   </div>
 </aside>
+
+<aside class="painel-lateral" id="painel-resumo">
+  <button type="button" class="painel-lateral-toggle" id="btn-toggle-sidebar-resumo" title="Resumo do dia">
+    <span class="pl-icone">📊</span>
+    <span class="pl-titulo">Resumo do dia</span>
+    <span class="pl-chevron">‹</span>
+  </button>
+  <div class="painel-lateral-corpo painel-resumo">
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+      <button id="btn-refresh-resumo" title="Atualizar resumo" style="border:1px solid #d1d5db; background:#fff; border-radius:6px; width:28px; height:28px; cursor:pointer; font-size:14px; line-height:1; margin-left:auto;">↻</button>
+    </div>
+    <div style="margin-top:10px;">
+      <input type="date" id="resumo-filtro-data" style="width:100%; padding:8px 10px; border:1px solid #d1d5db; border-radius:8px; font-size:14px; margin-bottom:14px;">
+      <div class="resumo-total-geral">
+        <div>Peso total<strong id="resumo-peso-total">0 kg</strong></div>
+        <div>Volumes<strong id="resumo-volumes-total">0</strong></div>
+        <div>Fornecedores<strong id="resumo-fornecedores-total">0</strong></div>
+      </div>
+      <div id="resumo-por-placa">Carregando...</div>
+    </div>
+  </div>
+</aside>
+</div>
 
 <div class="wrap">
   <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
@@ -351,25 +378,6 @@
     <div id="conteudo" class="loading">Carregando agendamentos...</div>
   </div>
 </div>
-
-<aside class="sidebar-esquerda sidebar-resumo" id="aside-resumo">
-  <div class="icone-sidebar" id="btn-toggle-sidebar-resumo" title="Resumo do dia">▶</div>
-  <div class="painel-sidebar painel-resumo">
-    <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
-      <h2 style="margin:0;">Resumo do dia</h2>
-      <button id="btn-refresh-resumo" title="Atualizar resumo" style="border:1px solid #d1d5db; background:#fff; border-radius:6px; width:28px; height:28px; cursor:pointer; font-size:14px; line-height:1;">↻</button>
-    </div>
-    <div style="margin-top:10px;">
-      <input type="date" id="resumo-filtro-data" style="width:100%; padding:8px 10px; border:1px solid #d1d5db; border-radius:8px; font-size:14px; margin-bottom:14px;">
-      <div class="resumo-total-geral">
-        <div>Peso total<strong id="resumo-peso-total">0 kg</strong></div>
-        <div>Volumes<strong id="resumo-volumes-total">0</strong></div>
-        <div>Fornecedores<strong id="resumo-fornecedores-total">0</strong></div>
-      </div>
-      <div id="resumo-por-placa">Carregando...</div>
-    </div>
-  </div>
-</aside>
 </div>
 
 <div id="toast"></div>
@@ -484,19 +492,25 @@
   const modalMotorista = document.getElementById('modal-motorista');
   const listaMotoristasDiv = document.getElementById('lista-motoristas');
   const motErro = document.getElementById('mot-erro');
-  const sidebarMotoristas = document.getElementById('sidebar-motoristas');
-  const btnToggleSidebarMotoristas = document.getElementById('btn-toggle-sidebar-motoristas');
 
-  // No hover (desktop) o painel já abre sozinho via CSS. O clique serve para
-  // "fixar" aberto — útil no celular/tablet, onde não existe hover.
-  btnToggleSidebarMotoristas.addEventListener('click', () => {
-    sidebarMotoristas.classList.toggle('aberta-fixa');
-  });
-  document.addEventListener('click', (e) => {
-    if (!sidebarMotoristas.contains(e.target)) {
-      sidebarMotoristas.classList.remove('aberta-fixa');
+  // ==== PAINÉIS LATERAIS (Motoristas / Resumo do dia) — expandem e recolhem, com preferência salva ====
+  function configurarPainelLateral(idPainel) {
+    const painel = document.getElementById(idPainel);
+    const btn = painel.querySelector('.painel-lateral-toggle');
+    const chaveStorage = `painel-lateral-${idPainel}-recolhido`;
+
+    if (localStorage.getItem(chaveStorage) === '1') {
+      painel.classList.add('recolhido');
     }
-  });
+
+    btn.addEventListener('click', () => {
+      const recolhido = painel.classList.toggle('recolhido');
+      localStorage.setItem(chaveStorage, recolhido ? '1' : '0');
+    });
+  }
+
+  configurarPainelLateral('painel-motoristas');
+  configurarPainelLateral('painel-resumo');
 
   async function carregarMotoristas() {
     const { data, error } = await supabaseClient
@@ -825,18 +839,6 @@
   }
 
   // ==== RESUMO DO DIA POR PLACA ====
-  const sidebarResumo = document.getElementById('aside-resumo');
-  const btnToggleSidebarResumo = document.getElementById('btn-toggle-sidebar-resumo');
-
-  btnToggleSidebarResumo.addEventListener('click', () => {
-    sidebarResumo.classList.toggle('aberta-fixa');
-  });
-  document.addEventListener('click', (e) => {
-    if (!sidebarResumo.contains(e.target)) {
-      sidebarResumo.classList.remove('aberta-fixa');
-    }
-  });
-
   const btnRefreshResumo = document.getElementById('btn-refresh-resumo');
   btnRefreshResumo.addEventListener('click', async (e) => {
     e.stopPropagation();
