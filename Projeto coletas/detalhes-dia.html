@@ -55,6 +55,26 @@
   .st-cancelado { background: #fee2e2; color: #991b1b; }
   .empty, .loading { padding: 40px; text-align: center; color: #6b7280; font-size: 14px; }
   .voltar { font-size: 13px; color: #6b7280; text-decoration: none; }
+  .obs-texto {
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .obs-texto.obs-expandido {
+    -webkit-line-clamp: unset;
+    display: block;
+  }
+  .obs-toggle {
+    border: none;
+    background: none;
+    color: #7c3aed;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 2px 0 0;
+  }
 
   @media (max-width: 768px) {
     body { padding: 16px 10px; }
@@ -160,7 +180,7 @@
         <tbody>
     `;
 
-    linhas.forEach(r => {
+    linhas.forEach((r, idx) => {
       pesoTotal += Number(r.peso_kg) || 0;
       volumesTotal += Number(r.quantidade_volumes) || 0;
       paletesTotal += Number(r.qtd_paletes) || 0;
@@ -173,7 +193,12 @@
           <td>${r.quantidade_volumes ?? '-'}</td>
           <td>${r.peso_kg ?? '-'}</td>
           <td>${r.qtd_paletes ?? '-'}</td>
-          <td style="max-width:220px; white-space:normal;">${r.observacoes ? r.observacoes : '-'}</td>
+          <td style="max-width:220px;">
+            ${r.observacoes ? `
+              <div class="obs-texto" id="obs-${idx}">${r.observacoes}</div>
+              <button type="button" class="obs-toggle" data-id="${idx}" style="display:none;">Expandir</button>
+            ` : '-'}
+          </td>
           <td><span class="badge st-${r.status}">${r.status}</span></td>
         </tr>
       `;
@@ -197,6 +222,22 @@
 
     conteudo.className = '';
     conteudo.innerHTML = html;
+
+    document.querySelectorAll('.obs-texto').forEach(div => {
+      // Só mostra o botão "Expandir" se o texto realmente estiver sendo cortado
+      if (div.scrollHeight > div.clientHeight + 1) {
+        const btn = document.querySelector(`.obs-toggle[data-id="${div.id.replace('obs-', '')}"]`);
+        if (btn) btn.style.display = 'inline-block';
+      }
+    });
+
+    document.querySelectorAll('.obs-toggle').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const texto = document.getElementById(`obs-${btn.dataset.id}`);
+        const expandido = texto.classList.toggle('obs-expandido');
+        btn.textContent = expandido ? 'Recolher' : 'Expandir';
+      });
+    });
   }
 
   carregar();

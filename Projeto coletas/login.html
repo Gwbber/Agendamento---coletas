@@ -67,7 +67,15 @@
     font-size: 13px;
     color: rgba(245,243,255,0.55);
     text-align: center;
-    margin: 0 0 26px;
+    margin: 0 0 10px;
+  }
+
+  .ultima-atualizacao {
+    font-size: 11px;
+    color: rgba(245,243,255,0.6);
+    text-align: center;
+    margin: 0 0 20px;
+    letter-spacing: 0.02em;
   }
 
   label {
@@ -146,6 +154,7 @@
   <p class="marca">FleetCo Logística</p>
   <h1>Área da transportadora</h1>
   <p class="subtitle">Entre para acompanhar as coletas do dia.</p>
+  <div class="ultima-atualizacao" id="ultima-atualizacao">Última atualização: --</div>
 
   <form id="form-login">
     <label for="email">E-mail</label>
@@ -173,6 +182,17 @@
   const form = document.getElementById('form-login');
   const erroDiv = document.getElementById('erro');
   const btnEntrar = document.getElementById('btn-entrar');
+  const ultimaAtualizacao = document.getElementById('ultima-atualizacao');
+
+  const formatarDataHora = (data) => new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  }).format(data);
+
+  ultimaAtualizacao.textContent = `Última atualização: ${formatarDataHora(new Date())}`;
 
   // Se veio de um logout por inatividade, mostra o aviso
   if (new URLSearchParams(window.location.search).get('motivo') === 'inatividade') {

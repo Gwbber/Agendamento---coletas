@@ -1,0 +1,8 @@
+{
+  "cleanUrls": false,
+  "trailingSlash": false,
+  "routes": [
+    { "src": "/", "dest": "/index.html" },
+    { "src": "/(.*)", "dest": "/Projeto%20coletas/$1" }
+  ]
+}
