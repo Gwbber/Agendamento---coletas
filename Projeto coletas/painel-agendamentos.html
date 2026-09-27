@@ -1151,7 +1151,7 @@
                 <option value="coletado" ${row.status === 'coletado' ? 'selected' : ''}>Coletado</option>
                 <option value="cancelado" ${row.status === 'cancelado' ? 'selected' : ''}>Cancelado</option>
               </select>
-              <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapaEnderecos[row.cnpj] || row.nome_empresa || '')}" target="_blank" rel="noopener" title="Ver endereço no Google Maps" style="text-decoration:none; font-size:18px; line-height:1;">📍</a>
+              <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapaEnderecos[row.cnpj] || row.nome_empresa || '')}" target="_blank" rel="noopener" title="Ver endereço no Google Maps" style="text-decoration:none; display:flex; align-items:center; gap:5px; color:#f5f3ff; font-size:13px; white-space:nowrap;"><img src="icone-localizacao.svg" alt="" width="18" height="18" style="display:block;">Localização</a>
             </div>
           </td>
         </tr>
