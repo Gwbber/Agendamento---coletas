@@ -1023,6 +1023,8 @@
   }
   // ==================================
 
+  let mapaEnderecos = {};
+
   async function carregarAgendamentos() {
     conteudo.className = 'loading';
     conteudo.textContent = 'Carregando agendamentos...';
@@ -1046,7 +1048,14 @@
       query = query.or(`cnpj.ilike.%${busca}%,nome_empresa.ilike.%${busca}%`);
     }
 
-    const { data, error } = await query;
+    const [{ data, error }, { data: rotas, error: errorRotas }] = await Promise.all([
+      query,
+      supabaseClient.from('fornecedores_rota').select('cnpj, endereco')
+    ]);
+
+    if (errorRotas) console.error('Erro ao carregar endereços:', errorRotas);
+    mapaEnderecos = {};
+    (rotas || []).forEach(r => { if (r.cnpj && r.endereco) mapaEnderecos[r.cnpj] = r.endereco; });
 
     if (error) {
       conteudo.className = 'empty';
@@ -1133,14 +1142,17 @@
               ${opcoesPlaca.replace(`value="${row.placa_veiculo}"`, `value="${row.placa_veiculo}" selected`)}
             </select>
           </td>
-          <td>
-            <select class="status-select" data-id="${row.id}">
-              <option value="pendente" ${row.status === 'pendente' ? 'selected' : ''}>Pendente</option>
-              <option value="reagendar" ${row.status === 'reagendar' ? 'selected' : ''}>Reagendar coleta</option>
-              <option value="confirmado" ${row.status === 'confirmado' ? 'selected' : ''}>Confirmado</option>
-              <option value="coletado" ${row.status === 'coletado' ? 'selected' : ''}>Coletado</option>
-              <option value="cancelado" ${row.status === 'cancelado' ? 'selected' : ''}>Cancelado</option>
-            </select>
+          <td style="overflow:visible;">
+            <div style="display:flex; align-items:center; gap:6px;">
+              <select class="status-select" data-id="${row.id}">
+                <option value="pendente" ${row.status === 'pendente' ? 'selected' : ''}>Pendente</option>
+                <option value="reagendar" ${row.status === 'reagendar' ? 'selected' : ''}>Reagendar coleta</option>
+                <option value="confirmado" ${row.status === 'confirmado' ? 'selected' : ''}>Confirmado</option>
+                <option value="coletado" ${row.status === 'coletado' ? 'selected' : ''}>Coletado</option>
+                <option value="cancelado" ${row.status === 'cancelado' ? 'selected' : ''}>Cancelado</option>
+              </select>
+              <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapaEnderecos[row.cnpj] || row.nome_empresa || '')}" target="_blank" rel="noopener" title="Ver endereço no Google Maps" style="text-decoration:none; font-size:18px; line-height:1;">📍</a>
+            </div>
           </td>
         </tr>
       `;

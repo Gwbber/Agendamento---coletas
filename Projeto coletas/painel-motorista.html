@@ -261,7 +261,7 @@
     // Só somem da lista quando a transportadora finalizar (campo "finalizado"), não pelo status marcado aqui.
     const [{ data, error }, { data: rotas, error: errorRotas }] = await Promise.all([
       supabaseClient.from('agendamentos_coleta').select('*').eq('finalizado', false),
-      supabaseClient.from('fornecedores_rota').select('cnpj, nome_exibicao, regiao, rota, ordem')
+      supabaseClient.from('fornecedores_rota').select('cnpj, nome_exibicao, regiao, rota, ordem, endereco')
     ]);
 
     if (error) {
@@ -347,6 +347,8 @@
         ? grupo.cnpjs.map(formatarCNPJ).join(' / ')
         : formatarCNPJ(grupo.cnpjs[0]);
       const idsAttr = grupo.ids.join(',');
+      const enderecoBusca = (info && info.endereco) ? info.endereco : (grupo.nome_empresa || '');
+      const linkMapa = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(enderecoBusca)}`;
 
       html += `
         <tr data-ids="${idsAttr}" style="${corLinha} transition: background-color 0.4s;">
@@ -356,11 +358,14 @@
           <td>${grupo.volumes || '-'}</td>
           <td>${grupo.peso || '-'}</td>
           <td>
+            <div style="display:flex; align-items:center; gap:8px;">
             <select class="status-select" data-ids="${idsAttr}">
               <option value="pendente" ${grupo.status === 'pendente' ? 'selected' : ''}>Pendente</option>
               <option value="reagendar" ${grupo.status === 'reagendar' ? 'selected' : ''}>Reagendar coleta</option>
               <option value="coletado" ${grupo.status === 'coletado' ? 'selected' : ''}>Coletado</option>
             </select>
+            <a href="${linkMapa}" target="_blank" rel="noopener" title="Ver endereço no Google Maps" style="text-decoration:none; font-size:18px; line-height:1;">📍</a>
+            </div>
           </td>
         </tr>
       `;
