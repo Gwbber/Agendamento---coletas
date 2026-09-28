@@ -275,7 +275,7 @@
 
     // Mapa CNPJ -> dados de rota, para enriquecer e ordenar as coletas
     const mapaRotas = {};
-    (rotas || []).forEach(r => { if (r.cnpj) mapaRotas[r.cnpj] = r; });
+    (rotas || []).forEach(r => { const chave = String(r.cnpj || '').replace(/\D/g, ''); if (chave) mapaRotas[chave] = r; });
 
     if (!data || data.length === 0) {
       linhasAtuais = [];
@@ -286,7 +286,7 @@
     }
 
     data.forEach(row => {
-      const info = mapaRotas[row.cnpj];
+      const info = mapaRotas[String(row.cnpj || '').replace(/\D/g, '')];
       row._rota_info = info || null;
       // Coletas sem CNPJ cadastrado na roteirização vão para o final da lista
       row._rota_num = info ? info.rota : 9999;

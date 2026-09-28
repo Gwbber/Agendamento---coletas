@@ -1053,9 +1053,15 @@
       supabaseClient.from('fornecedores_rota').select('cnpj, endereco')
     ]);
 
-    if (errorRotas) console.error('Erro ao carregar endereços:', errorRotas);
+    if (errorRotas) {
+      console.error('Erro ao carregar endereços:', errorRotas);
+      mostrarToast('Não foi possível carregar os endereços dos fornecedores (confira se o SQL de atualização foi executado no Supabase).', false);
+    }
     mapaEnderecos = {};
-    (rotas || []).forEach(r => { if (r.cnpj && r.endereco) mapaEnderecos[r.cnpj] = r.endereco; });
+    (rotas || []).forEach(r => {
+      const chave = String(r.cnpj || '').replace(/\D/g, '');
+      if (chave && r.endereco && r.endereco.trim()) mapaEnderecos[chave] = r.endereco.trim();
+    });
 
     if (error) {
       conteudo.className = 'empty';
@@ -1151,7 +1157,7 @@
                 <option value="coletado" ${row.status === 'coletado' ? 'selected' : ''}>Coletado</option>
                 <option value="cancelado" ${row.status === 'cancelado' ? 'selected' : ''}>Cancelado</option>
               </select>
-              <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapaEnderecos[row.cnpj] || row.nome_empresa || '')}" target="_blank" rel="noopener" title="Ver endereço no Google Maps" style="text-decoration:none; display:flex; align-items:center; gap:5px; color:#f5f3ff; font-size:13px; white-space:nowrap;"><img src="icone-localizacao.svg" alt="" width="18" height="18" style="display:block;">Localização</a>
+              <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapaEnderecos[String(row.cnpj || '').replace(/\D/g, '')] || row.nome_empresa || '')}" target="_blank" rel="noopener" title="Ver endereço no Google Maps" style="text-decoration:none; display:flex; align-items:center; gap:5px; color:#f5f3ff; font-size:13px; white-space:nowrap;"><img src="icone-localizacao.svg" alt="" width="18" height="18" style="display:block;">Localização</a>
             </div>
           </td>
         </tr>
