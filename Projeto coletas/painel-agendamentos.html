@@ -1084,7 +1084,9 @@
   let larguraColunas = {};
 
   function estiloLargura(campo) {
-    return larguraColunas[campo] ? `width:${larguraColunas[campo]}px;` : '';
+    if (larguraColunas[campo]) return `width:${larguraColunas[campo]}px;`;
+    if (campo === 'status') return `width:230px;`;
+    return '';
   }
 
   function rotuloOrdenavel(campo, texto) {
@@ -1148,7 +1150,7 @@
               ${opcoesPlaca.replace(`value="${row.placa_veiculo}"`, `value="${row.placa_veiculo}" selected`)}
             </select>
           </td>
-          <td style="overflow:visible;">
+          <td>
             <div style="display:flex; align-items:center; gap:6px;">
               <select class="status-select" data-id="${row.id}">
                 <option value="pendente" ${row.status === 'pendente' ? 'selected' : ''}>Pendente</option>
