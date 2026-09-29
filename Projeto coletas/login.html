@@ -166,6 +166,17 @@
     <button type="submit" id="btn-entrar">Entrar</button>
   </form>
 
+  <div style="text-align:center; margin-top:14px;">
+    <a href="#" id="link-esqueci-senha" style="font-size:13px; color:rgba(245,243,255,0.6); text-decoration:underline;">Esqueci minha senha</a>
+  </div>
+
+  <div id="bloco-recuperar-senha" style="display:none; margin-top:16px; padding-top:16px; border-top:1px solid rgba(255,255,255,0.14);">
+    <label for="email-recuperar">Informe seu e-mail</label>
+    <input type="email" id="email-recuperar" placeholder="seuemail@fleetco.com">
+    <button type="button" id="btn-enviar-recuperacao" style="margin-top:12px;">Enviar link de redefinição</button>
+    <div id="msg-recuperar-senha" style="margin-top:12px; font-size:13px; text-align:center; display:none;"></div>
+  </div>
+
   <div id="erro"></div>
   <div id="aviso-inatividade" style="margin-top:14px; font-size:13px; color:#fde68a; background:rgba(253,230,138,0.12); border:1px solid rgba(253,230,138,0.25); padding:10px; border-radius:10px; text-align:center; display:none;">
     Sua sessão expirou por inatividade. Faça login novamente.
@@ -230,6 +241,43 @@
     }
 
     window.location.href = 'painel-agendamentos.html';
+  });
+
+  // ---- Esqueci minha senha ----
+  const linkEsqueciSenha = document.getElementById('link-esqueci-senha');
+  const blocoRecuperarSenha = document.getElementById('bloco-recuperar-senha');
+  const emailRecuperar = document.getElementById('email-recuperar');
+  const btnEnviarRecuperacao = document.getElementById('btn-enviar-recuperacao');
+  const msgRecuperarSenha = document.getElementById('msg-recuperar-senha');
+
+  linkEsqueciSenha.addEventListener('click', (e) => {
+    e.preventDefault();
+    const emailDigitado = document.getElementById('email').value.trim();
+    if (emailDigitado) emailRecuperar.value = emailDigitado;
+    blocoRecuperarSenha.style.display = blocoRecuperarSenha.style.display === 'none' ? 'block' : 'none';
+    msgRecuperarSenha.style.display = 'none';
+  });
+
+  btnEnviarRecuperacao.addEventListener('click', async () => {
+    const emailParaRecuperar = emailRecuperar.value.trim();
+    if (!emailParaRecuperar) return;
+
+    btnEnviarRecuperacao.disabled = true;
+    btnEnviarRecuperacao.textContent = 'Enviando...';
+
+    // redirectTo aponta sempre pro endereço onde o site está rodando agora
+    // (evita cair num link quebrado tipo localhost quando publicado de verdade)
+    await supabaseClient.auth.resetPasswordForEmail(emailParaRecuperar, {
+      redirectTo: `${window.location.origin}/redefinir-senha.html`
+    });
+
+    btnEnviarRecuperacao.disabled = false;
+    btnEnviarRecuperacao.textContent = 'Enviar link de redefinição';
+
+    // Por segurança, mostramos sempre a mesma mensagem, exista ou não esse e-mail cadastrado
+    msgRecuperarSenha.textContent = 'Se esse e-mail estiver cadastrado, enviamos um link de redefinição para ele.';
+    msgRecuperarSenha.style.color = '#86efac';
+    msgRecuperarSenha.style.display = 'block';
   });
 </script>
 
