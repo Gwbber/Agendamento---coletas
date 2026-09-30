@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Coletas do dia</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    color: #1f2328;
+    background: #0a0713;
+    background-image:
+      radial-gradient(ellipse 60% 45% at 50% 0%, rgba(168,120,255,0.4), transparent 60%),
+      radial-gradient(ellipse 55% 40% at 8% 100%, rgba(124,58,237,0.28), transparent 65%),
+      radial-gradient(ellipse 55% 40% at 95% 100%, rgba(76,29,149,0.32), transparent 65%);
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+  }
+  .sidebar-nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 240px;
+    display: flex;
+    flex-direction: column;
+    padding: 22px 16px;
+    background: linear-gradient(180deg, rgba(24,16,38,0.9), rgba(16,10,26,0.92));
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-right: 1px solid rgba(255,255,255,0.12);
+    z-index: 30;
+    overflow-y: auto;
+  }
+  .sidebar-nav-topo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-bottom: 18px;
+    margin-bottom: 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.12);
+  }
+  .sidebar-nav-icone {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #a78bfa, #6d28d9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex: 0 0 auto;
+  }
+  .sidebar-nav-marca { font-size: 14px; font-weight: 800; color: #f5f3ff; line-height: 1.2; }
+  .sidebar-nav-sub { font-size: 11px; color: rgba(245,243,255,0.5); }
+  .sidebar-nav-links { display: flex; flex-direction: column; gap: 4px; }
+  .sidebar-nav-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 12px;
+    border: none;
+    border-radius: 8px;
+    background: none;
+    color: rgba(245,243,255,0.75);
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    text-align: left;
+    font-family: inherit;
+  }
+  .sidebar-nav-link:hover { background: rgba(255,255,255,0.08); color: #f5f3ff; }
+  .sidebar-nav-link.ativo {
+    background: linear-gradient(135deg, rgba(167,139,250,0.9), rgba(109,40,217,0.9));
+    color: #fff;
+  }
+  .sidebar-nav-link .icone-link { font-size: 15px; flex: 0 0 auto; }
+  .sidebar-nav-rodape {
+    margin-top: auto;
+    padding-top: 14px;
+    border-top: 1px solid rgba(255,255,255,0.12);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .conteudo-com-sidebar { margin-left: 240px; padding: 24px 16px; }
+  h1 { font-size: 22px; margin: 0 0 4px; color: #f5f3ff; }
+  p.subtitle { font-size: 14px; color: rgba(245,243,255,0.6); margin: 0 0 20px; }
+  .toolbar { display: flex; gap: 10px; align-items: center; margin-bottom: 20px; flex-wrap: wrap; }
+  .toolbar input {
+    padding: 8px 10px;
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 8px;
+    font-size: 14px;
+    background: rgba(255,255,255,0.08);
+    color: #f5f3ff;
+    color-scheme: dark;
+  }
+  .btn-glass {
+    padding: 8px 14px;
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 8px;
+    background: rgba(255,255,255,0.08);
+    color: #f5f3ff;
+    font-size: 14px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .btn-glass:hover { background: rgba(255,255,255,0.16); }
+  .cartoes-totais { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 24px; }
+  .cartao-total {
+    flex: 1 1 160px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.1), rgba(255,255,255,0.04));
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255,255,255,0.14);
+    border-radius: 12px;
+    padding: 16px 18px;
+  }
+  .cartao-total .rotulo { font-size: 12px; text-transform: uppercase; letter-spacing: 0.03em; color: rgba(245,243,255,0.55); margin: 0 0 6px; }
+  .cartao-total .valor { font-size: 26px; font-weight: 800; color: #f5f3ff; margin: 0; }
+  .lista-placas { display: flex; flex-direction: column; gap: 12px; }
+  .cartao-placa {
+    background: linear-gradient(180deg, rgba(255,255,255,0.1), rgba(255,255,255,0.04));
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255,255,255,0.14);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .placa-cabecalho {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 18px;
+    cursor: pointer;
+  }
+  .placa-cabecalho:hover { background: rgba(255,255,255,0.04); }
+  .placa-titulo { display: flex; align-items: center; gap: 10px; }
+  .seta-placa { display: inline-block; transition: transform 0.15s; font-size: 12px; color: rgba(245,243,255,0.5); }
+  .placa-nome { font-size: 16px; font-weight: 700; color: #f5f3ff; margin: 0; }
+  .placa-motorista { font-size: 12px; color: rgba(245,243,255,0.5); margin-top: 2px; }
+  .placa-resumo-rapido { font-size: 13px; color: rgba(245,243,255,0.6); white-space: nowrap; }
+  .placa-detalhe {
+    display: none;
+    padding: 0 18px 18px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+  }
+  .detalhe-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+    margin: 16px 0;
+  }
+  .detalhe-item { background: rgba(255,255,255,0.05); border-radius: 8px; padding: 10px 12px; }
+  .detalhe-item .rotulo { font-size: 11px; text-transform: uppercase; color: rgba(245,243,255,0.5); margin: 0 0 4px; }
+  .detalhe-item .valor { font-size: 17px; font-weight: 700; color: #f5f3ff; margin: 0; }
+  .status-breakdown { margin: 16px 0; }
+  .status-linha {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-bottom: 6px;
+  }
+  .status-linha .bolinha { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 8px; }
+  .status-pendente { background: rgba(234,179,8,0.16); }
+  .status-pendente .bolinha { background: #eab308; }
+  .status-reagendar { background: rgba(234,179,8,0.16); }
+  .status-reagendar .bolinha { background: #eab308; }
+  .status-confirmado { background: rgba(37,99,235,0.16); }
+  .status-confirmado .bolinha { background: #3b82f6; }
+  .status-coletado { background: rgba(22,163,74,0.16); }
+  .status-coletado .bolinha { background: #22c55e; }
+  .status-cancelado { background: rgba(220,38,38,0.16); }
+  .status-cancelado .bolinha { background: #ef4444; }
+  .status-linha .nome-status { color: #f5f3ff; font-weight: 600; display: flex; align-items: center; }
+  .status-linha .numeros { color: rgba(245,243,255,0.75); }
+  .acoes-placa { display: flex; gap: 8px; flex-wrap: wrap; }
+  .empty, .loading { padding: 40px; text-align: center; color: rgba(245,243,255,0.55); font-size: 14px; }
+  #toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    display: none;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+  .toast-ok { background: #ecfdf5; color: #047857; }
+  .toast-fail { background: #fef2f2; color: #b91c1c; }
+
+  @media (max-width: 768px) {
+    .sidebar-nav {
+      position: static;
+      width: 100%;
+      flex-direction: row;
+      align-items: center;
+      flex-wrap: wrap;
+      padding: 12px;
+    }
+    .sidebar-nav-topo { border-bottom: none; margin-bottom: 0; padding-bottom: 0; margin-right: 12px; }
+    .sidebar-nav-links { flex-direction: row; flex-wrap: wrap; }
+    .sidebar-nav-rodape { margin-top: 0; padding-top: 0; border-top: none; flex-direction: row; margin-left: auto; }
+    .conteudo-com-sidebar { margin-left: 0; padding: 16px 10px; }
+    h1 { font-size: 19px; }
+  }
+</style>
+</head>
+<body>
+
+<aside class="sidebar-nav">
+  <div class="sidebar-nav-topo">
+    <div class="sidebar-nav-icone">🚚</div>
+    <div>
+      <div class="sidebar-nav-marca">FleetCo Logística</div>
+      <div class="sidebar-nav-sub">Coletas do dia</div>
+    </div>
+  </div>
+  <nav class="sidebar-nav-links">
+    <a href="painel-agendamentos.html" class="sidebar-nav-link"><span class="icone-link">🗓️</span> Painel de agendamentos</a>
+    <a href="painel-agendamentos.html?motoristas=1" class="sidebar-nav-link"><span class="icone-link">🚛</span> Motoristas</a>
+    <a href="coletas-do-dia.html" class="sidebar-nav-link ativo"><span class="icone-link">📊</span> Coletas do dia</a>
+  </nav>
+  <div class="sidebar-nav-rodape">
+    <a href="motorista-login.html" class="sidebar-nav-link"><span class="icone-link">👤</span> Área do motorista</a>
+    <button type="button" id="btn-sair" class="sidebar-nav-link"><span class="icone-link">↩</span> Sair</button>
+  </div>
+</aside>
+
+<div class="conteudo-com-sidebar">
+  <h1>Coletas do dia</h1>
+  <p class="subtitle">Total das coletas por veículo. Clique numa placa para ver o detalhamento.</p>
+
+  <div class="toolbar">
+    <input type="date" id="filtro-data">
+    <button class="btn-glass" id="btn-atualizar">Atualizar</button>
+  </div>
+
+  <div class="cartoes-totais">
+    <div class="cartao-total">
+      <p class="rotulo">Peso total</p>
+      <p class="valor" id="total-peso">0 kg</p>
+    </div>
+    <div class="cartao-total">
+      <p class="rotulo">Volumes</p>
+      <p class="valor" id="total-volumes">0</p>
+    </div>
+    <div class="cartao-total">
+      <p class="rotulo">Fornecedores</p>
+      <p class="valor" id="total-fornecedores">0</p>
+    </div>
+    <div class="cartao-total">
+      <p class="rotulo">Veículos em rota</p>
+      <p class="valor" id="total-veiculos">0</p>
+    </div>
+  </div>
+
+  <div id="lista-placas" class="lista-placas">
+    <div class="loading">Carregando...</div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = "https://szdarwlcynzbamjodxsw.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_uiTPqOcdhAL5d0cBQorVgw_yIiismA-";
+
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // Protege a página: só continua se estiver logado
+  (async () => {
+    const { data } = await supabaseClient.auth.getSession();
+    if (!data.session) {
+      window.location.href = 'login.html';
+    }
+  })();
+
+  document.getElementById('btn-sair').addEventListener('click', async () => {
+    await supabaseClient.auth.signOut();
+    window.location.href = 'login.html';
+  });
+
+  // ==== LOGOUT AUTOMÁTICO POR INATIVIDADE (20 minutos) ====
+  const TEMPO_LIMITE_MS = 20 * 60 * 1000;
+  let timeoutId;
+  async function logoutPorInatividade() {
+    await supabaseClient.auth.signOut();
+    window.location.href = 'login.html?motivo=inatividade';
+  }
+  function reiniciarContadorInatividade() {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(logoutPorInatividade, TEMPO_LIMITE_MS);
+  }
+  ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'click'].forEach(evento => {
+    document.addEventListener(evento, reiniciarContadorInatividade, { passive: true });
+  });
+  reiniciarContadorInatividade();
+  // ==========================================================
+
+  function hojeLocalISO() {
+    const d = new Date();
+    const ano = d.getFullYear();
+    const mes = String(d.getMonth() + 1).padStart(2, '0');
+    const dia = String(d.getDate()).padStart(2, '0');
+    return `${ano}-${mes}-${dia}`;
+  }
+
+  function formatarData(dataStr) {
+    if (!dataStr) return '-';
+    const [ano, mes, dia] = dataStr.split('-');
+    return `${dia}/${mes}/${ano}`;
+  }
+
+  const toast = document.getElementById('toast');
+  function mostrarToast(msg, ok) {
+    toast.textContent = msg;
+    toast.className = ok ? 'toast-ok' : 'toast-fail';
+    toast.style.display = 'block';
+    setTimeout(() => { toast.style.display = 'none'; }, 3000);
+  }
+
+  const ROTULOS_STATUS = {
+    pendente: 'Pendente',
+    reagendar: 'Reagendar coleta',
+    confirmado: 'Confirmado',
+    coletado: 'Coletado',
+    cancelado: 'Cancelado'
+  };
+  const ORDEM_STATUS = ['pendente', 'reagendar', 'confirmado', 'coletado', 'cancelado'];
+
+  const filtroData = document.getElementById('filtro-data');
+  const listaPlacasDiv = document.getElementById('lista-placas');
+  let listaMotoristas = [];
+
+  async function carregarMotoristas() {
+    const { data, error } = await supabaseClient.from('motoristas').select('placa, nome');
+    if (error) { console.error(error); return; }
+    listaMotoristas = data || [];
+  }
+
+  async function carregarColetasDoDia() {
+    if (!filtroData.value) filtroData.value = hojeLocalISO();
+    const dataRef = filtroData.value;
+
+    listaPlacasDiv.innerHTML = '<div class="loading">Carregando...</div>';
+
+    const { data, error } = await supabaseClient
+      .from('agendamentos_coleta')
+      .select('placa_veiculo, peso_kg, quantidade_volumes, qtd_paletes, nome_empresa, status')
+      .eq('previsao_coleta', dataRef);
+
+    if (error) {
+      listaPlacasDiv.innerHTML = '<div class="empty">Erro ao carregar as coletas do dia.</div>';
+      console.error(error);
+      return;
+    }
+
+    const linhas = data || [];
+
+    // ---- Totais gerais do dia ----
+    let pesoTotalGeral = 0, volumesTotalGeral = 0;
+    const fornecedoresGeral = new Set();
+    linhas.forEach(r => {
+      pesoTotalGeral += Number(r.peso_kg) || 0;
+      volumesTotalGeral += Number(r.quantidade_volumes) || 0;
+      if (r.nome_empresa) fornecedoresGeral.add(r.nome_empresa);
+    });
+
+    document.getElementById('total-peso').textContent = `${pesoTotalGeral.toLocaleString('pt-BR')} kg`;
+    document.getElementById('total-volumes').textContent = volumesTotalGeral.toLocaleString('pt-BR');
+    document.getElementById('total-fornecedores').textContent = fornecedoresGeral.size;
+
+    if (linhas.length === 0) {
+      document.getElementById('total-veiculos').textContent = '0';
+      listaPlacasDiv.innerHTML = '<div class="empty">Nenhuma coleta prevista para esse dia.</div>';
+      return;
+    }
+
+    // ---- Agrupa por placa ----
+    const grupos = {};
+    linhas.forEach(r => {
+      const chave = r.placa_veiculo || 'sem_placa';
+      if (!grupos[chave]) {
+        grupos[chave] = {
+          peso: 0, volumes: 0, paletes: 0,
+          fornecedores: new Set(),
+          porStatus: {}
+        };
+        ORDEM_STATUS.forEach(s => { grupos[chave].porStatus[s] = { clientes: 0, volumes: 0 }; });
+      }
+      const g = grupos[chave];
+      g.peso += Number(r.peso_kg) || 0;
+      g.volumes += Number(r.quantidade_volumes) || 0;
+      g.paletes += Number(r.qtd_paletes) || 0;
+      if (r.nome_empresa) g.fornecedores.add(r.nome_empresa);
+
+      const statusChave = ORDEM_STATUS.includes(r.status) ? r.status : 'pendente';
+      g.porStatus[statusChave].clientes += 1;
+      g.porStatus[statusChave].volumes += Number(r.quantidade_volumes) || 0;
+    });
+
+    document.getElementById('total-veiculos').textContent =
+      Object.keys(grupos).filter(k => k !== 'sem_placa').length;
+
+    const nomeMotoristaPorPlaca = {};
+    listaMotoristas.forEach(m => { nomeMotoristaPorPlaca[m.placa] = m.nome; });
+
+    const chavesOrdenadas = Object.keys(grupos).sort((a, b) => {
+      if (a === 'sem_placa') return 1;
+      if (b === 'sem_placa') return -1;
+      return a.localeCompare(b);
+    });
+
+    listaPlacasDiv.innerHTML = chavesOrdenadas.map(chave => {
+      const g = grupos[chave];
+      const titulo = chave === 'sem_placa' ? 'Sem motorista atribuído' : chave;
+      const motorista = chave !== 'sem_placa' && nomeMotoristaPorPlaca[chave] ? nomeMotoristaPorPlaca[chave] : '';
+
+      const linhasStatus = ORDEM_STATUS.map(s => {
+        const info = g.porStatus[s];
+        return `
+          <div class="status-linha status-${s}">
+            <span class="nome-status"><span class="bolinha"></span>${ROTULOS_STATUS[s]}</span>
+            <span class="numeros">${info.clientes} ${info.clientes === 1 ? 'cliente' : 'clientes'} · ${info.volumes.toLocaleString('pt-BR')} vol.</span>
+          </div>
+        `;
+      }).join('');
+
+      return `
+        <div class="cartao-placa">
+          <div class="placa-cabecalho" data-chave="${chave}">
+            <div class="placa-titulo">
+              <span class="seta-placa">▶</span>
+              <div>
+                <p class="placa-nome">${titulo}</p>
+                ${motorista ? `<div class="placa-motorista">${motorista}</div>` : ''}
+              </div>
+            </div>
+            <div class="placa-resumo-rapido">${g.peso.toLocaleString('pt-BR')} kg · ${g.volumes.toLocaleString('pt-BR')} vol.</div>
+          </div>
+          <div class="placa-detalhe">
+            <div class="detalhe-grid">
+              <div class="detalhe-item"><p class="rotulo">Peso total</p><p class="valor">${g.peso.toLocaleString('pt-BR')} kg</p></div>
+              <div class="detalhe-item"><p class="rotulo">Volumes</p><p class="valor">${g.volumes.toLocaleString('pt-BR')}</p></div>
+              <div class="detalhe-item"><p class="rotulo">Paletes</p><p class="valor">${g.paletes.toLocaleString('pt-BR')}</p></div>
+              <div class="detalhe-item"><p class="rotulo">Fornecedores</p><p class="valor">${g.fornecedores.size}</p></div>
+            </div>
+            <div class="status-breakdown">${linhasStatus}</div>
+            <div class="acoes-placa">
+              <button class="btn-glass btn-detalhe-placa" data-placa="${chave === 'sem_placa' ? '' : chave}">Ver detalhes ↗</button>
+              ${chave !== 'sem_placa' ? `<button class="btn-glass btn-finalizar-placa" data-placa="${chave}">✓ Finalizar coletas do dia</button>` : ''}
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    listaPlacasDiv.querySelectorAll('.placa-cabecalho').forEach(cabecalho => {
+      cabecalho.addEventListener('click', () => {
+        const cartao = cabecalho.closest('.cartao-placa');
+        const detalhe = cartao.querySelector('.placa-detalhe');
+        const seta = cabecalho.querySelector('.seta-placa');
+        const aberto = detalhe.style.display === 'block';
+        detalhe.style.display = aberto ? 'none' : 'block';
+        seta.style.transform = aberto ? 'rotate(0deg)' : 'rotate(90deg)';
+      });
+    });
+
+    listaPlacasDiv.querySelectorAll('.btn-detalhe-placa').forEach(botao => {
+      botao.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const placaClicada = botao.dataset.placa;
+        const dataRef = filtroData.value || hojeLocalISO();
+        const url = placaClicada
+          ? `detalhes-dia.html?data=${dataRef}&placa=${encodeURIComponent(placaClicada)}`
+          : `detalhes-dia.html?data=${dataRef}&placa=sem_placa`;
+        window.open(url, '_blank');
+      });
+    });
+
+    listaPlacasDiv.querySelectorAll('.btn-finalizar-placa').forEach(botao => {
+      botao.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const placaClicada = botao.dataset.placa;
+        const dataRef = filtroData.value || hojeLocalISO();
+
+        const confirmar = confirm(`Finalizar todas as coletas da placa ${placaClicada} no dia ${formatarData(dataRef)}?\n\nElas deixarão de aparecer para o motorista.`);
+        if (!confirmar) return;
+
+        botao.disabled = true;
+        botao.textContent = 'Finalizando...';
+
+        const { error } = await supabaseClient
+          .from('agendamentos_coleta')
+          .update({ finalizado: true })
+          .eq('previsao_coleta', dataRef)
+          .eq('placa_veiculo', placaClicada);
+
+        if (error) {
+          mostrarToast('Não foi possível finalizar as coletas.', false);
+          console.error(error);
+          botao.disabled = false;
+          botao.textContent = '✓ Finalizar coletas do dia';
+          return;
+        }
+
+        mostrarToast('Coletas do dia finalizadas.', true);
+        await carregarColetasDoDia();
+      });
+    });
+  }
+
+  document.getElementById('btn-atualizar').addEventListener('click', carregarColetasDoDia);
+  filtroData.addEventListener('change', carregarColetasDoDia);
+
+  carregarMotoristas().then(carregarColetasDoDia);
+</script>
+
+</body>
+</html>

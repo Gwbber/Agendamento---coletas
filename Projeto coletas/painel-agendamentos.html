@@ -9,7 +9,7 @@
   body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
     margin: 0;
-    padding: 24px 16px;
+    padding: 0;
     color: #1f2328;
     background: #0a0713;
     background-image:
@@ -19,120 +19,82 @@
     background-repeat: no-repeat;
     background-attachment: fixed;
   }
-  .wrap { max-width: none; flex: 1 1 500px; min-width: 0; }
-  .layout {
-    display: flex;
-    gap: 20px;
-    align-items: flex-start;
-    max-width: none;
-    margin: 0 auto;
-    flex-wrap: wrap;
-  }
-  .coluna-lateral {
-    order: -1;
+  .sidebar-nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 240px;
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    flex: 0 0 auto;
-    align-self: flex-start;
-    position: sticky;
-    top: 20px;
-  }
-  .painel-lateral {
-    width: 280px;
-    color: #f5f3ff;
-    background: linear-gradient(180deg, rgba(30,20,45,0.75), rgba(20,14,32,0.7));
+    padding: 22px 16px;
+    background: linear-gradient(180deg, rgba(24,16,38,0.9), rgba(16,10,26,0.92));
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255,255,255,0.16);
-    border-radius: 12px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-    overflow: hidden;
-    transition: width 0.22s ease;
+    border-right: 1px solid rgba(255,255,255,0.12);
+    z-index: 30;
+    overflow-y: auto;
   }
-  .painel-lateral-toggle {
-    width: 100%;
+  .sidebar-nav-topo {
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 13px 14px;
-    background: none;
+    padding-bottom: 18px;
+    margin-bottom: 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.12);
+  }
+  .sidebar-nav-icone {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #a78bfa, #6d28d9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex: 0 0 auto;
+  }
+  .sidebar-nav-marca { font-size: 14px; font-weight: 800; color: #f5f3ff; line-height: 1.2; }
+  .sidebar-nav-sub { font-size: 11px; color: rgba(245,243,255,0.5); }
+  .sidebar-nav-links {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .sidebar-nav-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 12px;
     border: none;
-    color: #f5f3ff;
+    border-radius: 8px;
+    background: none;
+    color: rgba(245,243,255,0.75);
     font-size: 14px;
-    font-weight: 700;
+    font-weight: 600;
+    text-decoration: none;
     cursor: pointer;
     text-align: left;
+    font-family: inherit;
   }
-  .painel-lateral-toggle .pl-icone { font-size: 16px; flex: 0 0 auto; line-height: 1; }
-  .painel-lateral-toggle .pl-titulo { flex: 1 1 auto; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .painel-lateral-toggle .pl-chevron {
-    font-size: 13px;
-    color: rgba(245,243,255,0.55);
-    flex: 0 0 auto;
-    transition: transform 0.2s;
+  .sidebar-nav-link:hover { background: rgba(255,255,255,0.08); color: #f5f3ff; }
+  .sidebar-nav-link.ativo {
+    background: linear-gradient(135deg, rgba(167,139,250,0.9), rgba(109,40,217,0.9));
+    color: #fff;
   }
-  .painel-lateral-corpo {
-    padding: 0 14px 16px;
-    border-top: 1px solid rgba(255,255,255,0.1);
-    margin-top: 2px;
-    padding-top: 12px;
-  }
-  .painel-lateral.recolhido {
-    width: 48px;
-  }
-  .painel-lateral.recolhido .painel-lateral-toggle {
-    justify-content: center;
-    padding: 13px 0;
-  }
-  .painel-lateral.recolhido .pl-titulo,
-  .painel-lateral.recolhido .pl-chevron,
-  .painel-lateral.recolhido .painel-lateral-corpo {
-    display: none;
-  }
-  .painel-resumo h2 {
-    font-size: 15px;
-    margin: 0 0 2px;
-    color: #f5f3ff;
-  }
-  .resumo-data {
-    font-size: 13px;
-    color: rgba(245,243,255,0.55);
-    margin: 0 0 16px;
-  }
-  .resumo-total-geral {
-    display: flex;
-    justify-content: space-between;
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 8px;
-    padding: 10px 12px;
-    margin-bottom: 14px;
-    font-size: 13px;
-    color: rgba(245,243,255,0.85);
-  }
-  .resumo-total-geral strong { display: block; font-size: 15px; color: #f5f3ff; }
-  .resumo-placa {
+  .sidebar-nav-link .icone-link { font-size: 15px; flex: 0 0 auto; }
+  .sidebar-nav-rodape {
+    margin-top: auto;
+    padding-top: 14px;
     border-top: 1px solid rgba(255,255,255,0.12);
-    padding: 10px 0;
-    font-size: 13px;
-  }
-  .resumo-placa:first-of-type { border-top: none; }
-  .resumo-placa .placa-nome {
-    font-weight: 700;
-    font-size: 13px;
-    margin-bottom: 2px;
-    color: #f5f3ff;
-  }
-  .resumo-placa .motorista-nome {
-    color: rgba(245,243,255,0.55);
-    font-size: 12px;
-    margin-bottom: 6px;
-  }
-  .resumo-placa .linha {
     display: flex;
-    justify-content: space-between;
-    color: rgba(245,243,255,0.8);
+    flex-direction: column;
+    gap: 4px;
+  }
+  .conteudo-com-sidebar {
+    margin-left: 240px;
+    padding: 24px 16px;
   }
   h1 {
     font-size: 22px;
@@ -323,11 +285,18 @@
 
   /* ==== RESPONSIVIDADE PARA CELULAR ==== */
   @media (max-width: 768px) {
-    body { padding: 16px 10px; }
-    .layout { flex-direction: column; gap: 16px; padding-left: 0; padding-right: 0; }
-    .wrap { flex: 1 1 auto; width: 100%; min-width: 0; }
-    .coluna-lateral { width: 100%; position: static; }
-    .painel-lateral { width: 100% !important; }
+    .sidebar-nav {
+      position: static;
+      width: 100%;
+      flex-direction: row;
+      align-items: center;
+      flex-wrap: wrap;
+      padding: 12px;
+    }
+    .sidebar-nav-topo { border-bottom: none; margin-bottom: 0; padding-bottom: 0; margin-right: 12px; }
+    .sidebar-nav-links { flex-direction: row; flex-wrap: wrap; }
+    .sidebar-nav-rodape { margin-top: 0; padding-top: 0; border-top: none; flex-direction: row; margin-left: auto; }
+    .conteudo-com-sidebar { margin-left: 0; padding: 16px 10px; }
     h1 { font-size: 19px; }
     .table-card { -webkit-overflow-scrolling: touch; }
   }
@@ -335,56 +304,30 @@
 </head>
 <body>
 
-<div class="layout">
-<div class="coluna-lateral">
-<aside class="painel-lateral" id="painel-motoristas">
-  <button type="button" class="painel-lateral-toggle" id="btn-toggle-sidebar-motoristas" title="Motoristas">
-    <span class="pl-icone">🚚</span>
-    <span class="pl-titulo">Motoristas</span>
-    <span class="pl-chevron">‹</span>
-  </button>
-  <div class="painel-lateral-corpo">
-    <div style="margin-top:0;">
-      <button id="btn-novo-motorista" style="width:100%; padding:8px; border:1px solid #d1d5db; border-radius:8px; background:#fff; font-size:13px; cursor:pointer; margin-bottom:12px;">+ Novo motorista</button>
-      <div id="lista-motoristas">Carregando...</div>
+<aside class="sidebar-nav">
+  <div class="sidebar-nav-topo">
+    <div class="sidebar-nav-icone">🚚</div>
+    <div>
+      <div class="sidebar-nav-marca">FleetCo Logística</div>
+      <div class="sidebar-nav-sub">Painel de agendamentos</div>
     </div>
+  </div>
+  <nav class="sidebar-nav-links">
+    <a href="painel-agendamentos.html" class="sidebar-nav-link ativo"><span class="icone-link">🗓️</span> Painel de agendamentos</a>
+    <button type="button" id="nav-motoristas" class="sidebar-nav-link"><span class="icone-link">🚛</span> Motoristas</button>
+    <a href="coletas-do-dia.html" class="sidebar-nav-link"><span class="icone-link">📊</span> Coletas do dia</a>
+  </nav>
+  <div class="sidebar-nav-rodape">
+    <a href="motorista-login.html" class="sidebar-nav-link"><span class="icone-link">👤</span> Área do motorista</a>
+    <button type="button" id="btn-sair" class="sidebar-nav-link"><span class="icone-link">↩</span> Sair</button>
   </div>
 </aside>
 
-<aside class="painel-lateral" id="painel-resumo">
-  <button type="button" class="painel-lateral-toggle" id="btn-toggle-sidebar-resumo" title="Resumo do dia">
-    <span class="pl-icone">📊</span>
-    <span class="pl-titulo">Resumo do dia</span>
-    <span class="pl-chevron">‹</span>
-  </button>
-  <div class="painel-lateral-corpo painel-resumo">
-    <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
-      <button id="btn-refresh-resumo" title="Atualizar resumo" style="border:1px solid #d1d5db; background:#fff; border-radius:6px; width:28px; height:28px; cursor:pointer; font-size:14px; line-height:1; margin-left:auto;">↻</button>
-    </div>
-    <div style="margin-top:10px;">
-      <input type="date" id="resumo-filtro-data" style="width:100%; padding:8px 10px; border:1px solid #d1d5db; border-radius:8px; font-size:14px; margin-bottom:14px;">
-      <div class="resumo-total-geral">
-        <div>Peso total<strong id="resumo-peso-total">0 kg</strong></div>
-        <div>Volumes<strong id="resumo-volumes-total">0</strong></div>
-        <div>Fornecedores<strong id="resumo-fornecedores-total">0</strong></div>
-      </div>
-      <div id="resumo-por-placa">Carregando...</div>
-    </div>
-  </div>
-</aside>
-</div>
-
-<div class="wrap">
+<div class="conteudo-com-sidebar">
   <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
     <div>
       <h1>Painel de agendamentos</h1>
       <p class="subtitle">Acompanhe e atualize o status das coletas solicitadas.</p>
-    </div>
-    <div style="display:flex; gap:8px; flex-wrap:wrap;">
-      <a href="motorista-login.html" style="text-decoration:none;">
-        <button class="btn-glass">Área do motorista</button>
-      </a>
-      <button id="btn-sair" class="btn-glass">Sair</button>
     </div>
   </div>
 
@@ -410,6 +353,16 @@
     <div id="conteudo" class="loading">Carregando agendamentos...</div>
   </div>
 </div>
+
+<div id="modal-lista-motoristas" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); align-items:center; justify-content:center; z-index:50;">
+  <div style="background:#fff; border-radius:12px; padding:24px; max-width:420px; width:90%; max-height:80vh; overflow-y:auto;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+      <h3 style="margin:0; font-size:17px;">Motoristas</h3>
+      <button id="fechar-lista-motoristas" style="border:none; background:none; font-size:20px; cursor:pointer; line-height:1;">&times;</button>
+    </div>
+    <button id="btn-novo-motorista" style="width:100%; padding:8px; border:1px solid #d1d5db; border-radius:8px; background:#fff; font-size:13px; cursor:pointer; margin-bottom:12px;">+ Novo motorista</button>
+    <div id="lista-motoristas">Carregando...</div>
+  </div>
 </div>
 
 <div id="toast"></div>
@@ -525,24 +478,20 @@
   const listaMotoristasDiv = document.getElementById('lista-motoristas');
   const motErro = document.getElementById('mot-erro');
 
-  // ==== PAINÉIS LATERAIS (Motoristas / Resumo do dia) — expandem e recolhem, com preferência salva ====
-  function configurarPainelLateral(idPainel) {
-    const painel = document.getElementById(idPainel);
-    const btn = painel.querySelector('.painel-lateral-toggle');
-    const chaveStorage = `painel-lateral-${idPainel}-recolhido`;
+  // ==== NAVEGAÇÃO: abrir/fechar modal de motoristas ====
+  const modalListaMotoristas = document.getElementById('modal-lista-motoristas');
+  document.getElementById('nav-motoristas').addEventListener('click', () => {
+    modalListaMotoristas.style.display = 'flex';
+  });
+  document.getElementById('fechar-lista-motoristas').addEventListener('click', () => {
+    modalListaMotoristas.style.display = 'none';
+  });
 
-    if (localStorage.getItem(chaveStorage) === '1') {
-      painel.classList.add('recolhido');
-    }
-
-    btn.addEventListener('click', () => {
-      const recolhido = painel.classList.toggle('recolhido');
-      localStorage.setItem(chaveStorage, recolhido ? '1' : '0');
-    });
+  // Se chegou aqui vindo de outra página com ?motoristas=1, já abre o modal direto
+  if (new URLSearchParams(window.location.search).get('motoristas') === '1') {
+    modalListaMotoristas.style.display = 'flex';
+    history.replaceState(null, '', window.location.pathname);
   }
-
-  configurarPainelLateral('painel-motoristas');
-  configurarPainelLateral('painel-resumo');
 
   async function carregarMotoristas() {
     const { data, error } = await supabaseClient
@@ -596,6 +545,7 @@
         motErro.style.display = 'none';
         document.getElementById('mot-form-wrap').style.display = 'block';
         document.getElementById('mot-senha-wrap').style.display = 'none';
+        modalListaMotoristas.style.display = 'none';
         modalMotorista.style.display = 'flex';
       });
     });
@@ -604,6 +554,7 @@
   let motoristaEditandoId = null;
 
   document.getElementById('btn-novo-motorista').addEventListener('click', () => {
+    modalListaMotoristas.style.display = 'none';
     motoristaEditandoId = null;
     document.getElementById('mot-titulo').textContent = 'Novo motorista';
     document.getElementById('mot-subtitulo').textContent = 'Uma senha de acesso será gerada automaticamente para o motorista.';
@@ -870,159 +821,6 @@
     return cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
   }
 
-  // ==== RESUMO DO DIA POR PLACA ====
-  const btnRefreshResumo = document.getElementById('btn-refresh-resumo');
-  btnRefreshResumo.addEventListener('click', async (e) => {
-    e.stopPropagation();
-    btnRefreshResumo.style.transform = 'rotate(360deg)';
-    await carregarMotoristas();
-    await atualizarResumoDia();
-    setTimeout(() => { btnRefreshResumo.style.transform = ''; }, 300);
-  });
-
-  const resumoFiltroData = document.getElementById('resumo-filtro-data');
-
-  async function atualizarResumoDia() {
-    if (!resumoFiltroData.value) {
-      resumoFiltroData.value = hojeLocalISO();
-    }
-    const dataRef = resumoFiltroData.value;
-
-    const resumoPorPlacaDiv = document.getElementById('resumo-por-placa');
-
-    const { data, error } = await supabaseClient
-      .from('agendamentos_coleta')
-      .select('placa_veiculo, peso_kg, quantidade_volumes, nome_empresa, qtd_paletes')
-      .eq('previsao_coleta', dataRef);
-
-    if (error) {
-      resumoPorPlacaDiv.innerHTML = '<span style="color:#6b7280; font-size:13px;">Erro ao carregar resumo.</span>';
-      console.error(error);
-      return;
-    }
-
-    const linhas = data || [];
-
-    // Totais gerais do dia
-    let pesoTotal = 0, volumesTotal = 0;
-    const fornecedoresUnicos = new Set();
-    linhas.forEach(r => {
-      pesoTotal += Number(r.peso_kg) || 0;
-      volumesTotal += Number(r.quantidade_volumes) || 0;
-      if (r.nome_empresa) fornecedoresUnicos.add(r.nome_empresa);
-    });
-
-    document.getElementById('resumo-peso-total').textContent = `${pesoTotal.toLocaleString('pt-BR')} kg`;
-    document.getElementById('resumo-volumes-total').textContent = volumesTotal.toLocaleString('pt-BR');
-    document.getElementById('resumo-fornecedores-total').textContent = fornecedoresUnicos.size;
-
-    if (linhas.length === 0) {
-      resumoPorPlacaDiv.innerHTML = '<span style="color:#6b7280; font-size:13px;">Nenhuma coleta para esse dia.</span>';
-      return;
-    }
-
-    // Agrupa por placa
-    const grupos = {}; // placa (ou 'sem_placa') -> { peso, volumes, fornecedores:Set }
-    linhas.forEach(r => {
-      const chave = r.placa_veiculo || 'sem_placa';
-      if (!grupos[chave]) grupos[chave] = { peso: 0, volumes: 0, paletes: 0, fornecedores: new Set() };
-      grupos[chave].peso += Number(r.peso_kg) || 0;
-      grupos[chave].volumes += Number(r.quantidade_volumes) || 0;
-      grupos[chave].paletes += Number(r.qtd_paletes) || 0;
-      if (r.nome_empresa) grupos[chave].fornecedores.add(r.nome_empresa);
-    });
-
-    const nomeMotoristaPorPlaca = {};
-    listaMotoristas.forEach(m => { nomeMotoristaPorPlaca[m.placa] = m.nome; });
-
-    const chavesOrdenadas = Object.keys(grupos).sort((a, b) => {
-      if (a === 'sem_placa') return 1;
-      if (b === 'sem_placa') return -1;
-      return a.localeCompare(b);
-    });
-
-    resumoPorPlacaDiv.innerHTML = chavesOrdenadas.map((chave, i) => {
-      const g = grupos[chave];
-      const titulo = chave === 'sem_placa' ? 'Sem motorista atribuído' : chave;
-      const motorista = chave !== 'sem_placa' && nomeMotoristaPorPlaca[chave] ? nomeMotoristaPorPlaca[chave] : '';
-      return `
-        <div class="resumo-placa">
-          <div class="placa-cabecalho" data-idx="${i}" style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;">
-            <span style="display:flex; align-items:center; gap:6px;">
-              <span class="seta-placa" style="display:inline-block; transition:transform 0.15s; font-size:10px;">▶</span>
-              <span class="placa-nome" style="margin:0;">${titulo}</span>
-            </span>
-            <span style="color:#9ca3af; font-size:12px;">${g.peso.toLocaleString('pt-BR')} kg · ${g.volumes.toLocaleString('pt-BR')} vol.</span>
-          </div>
-          <div class="placa-detalhe" style="display:none; margin-top:6px;">
-            ${motorista ? `<div class="motorista-nome">${motorista}</div>` : ''}
-            <div class="linha"><span>Peso</span><span>${g.peso.toLocaleString('pt-BR')} kg</span></div>
-            <div class="linha"><span>Volumes</span><span>${g.volumes.toLocaleString('pt-BR')}</span></div>
-            <div class="linha"><span>Paletes</span><span>${g.paletes.toLocaleString('pt-BR')}</span></div>
-            <div class="linha"><span>Fornecedores</span><span>${g.fornecedores.size}</span></div>
-            <button class="btn-detalhe-placa" data-placa="${chave === 'sem_placa' ? '' : chave}" style="width:100%; margin-top:8px; padding:6px; border:1px solid #d1d5db; border-radius:6px; background:#fff; font-size:12px; cursor:pointer;">Ver detalhes ↗</button>
-            ${chave !== 'sem_placa' ? `<button class="btn-finalizar-placa" data-placa="${chave}" style="width:100%; margin-top:6px; padding:6px; border:1px solid #16a34a; color:#16a34a; border-radius:6px; background:#fff; font-size:12px; cursor:pointer;">✓ Finalizar coletas do dia</button>` : ''}
-          </div>
-        </div>
-      `;
-    }).join('');
-
-    resumoPorPlacaDiv.querySelectorAll('.placa-cabecalho').forEach(cabecalho => {
-      cabecalho.addEventListener('click', () => {
-        const detalhe = cabecalho.nextElementSibling;
-        const seta = cabecalho.querySelector('.seta-placa');
-        const aberto = detalhe.style.display !== 'none';
-        detalhe.style.display = aberto ? 'none' : 'block';
-        seta.style.transform = aberto ? 'rotate(0deg)' : 'rotate(90deg)';
-      });
-    });
-
-    resumoPorPlacaDiv.querySelectorAll('.btn-detalhe-placa').forEach(botao => {
-      botao.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const placaClicada = botao.dataset.placa;
-        const dataRef = resumoFiltroData.value || hojeLocalISO();
-        const url = placaClicada
-          ? `detalhes-dia.html?data=${dataRef}&placa=${encodeURIComponent(placaClicada)}`
-          : `detalhes-dia.html?data=${dataRef}&placa=sem_placa`;
-        window.open(url, '_blank');
-      });
-    });
-
-    resumoPorPlacaDiv.querySelectorAll('.btn-finalizar-placa').forEach(botao => {
-      botao.addEventListener('click', async (e) => {
-        e.stopPropagation();
-        const placaClicada = botao.dataset.placa;
-        const dataRef = resumoFiltroData.value || hojeLocalISO();
-
-        const confirmar = confirm(`Finalizar todas as coletas da placa ${placaClicada} no dia ${formatarData(dataRef)}?\n\nElas deixarão de aparecer para o motorista.`);
-        if (!confirmar) return;
-
-        botao.disabled = true;
-        botao.textContent = 'Finalizando...';
-
-        const { error } = await supabaseClient
-          .from('agendamentos_coleta')
-          .update({ finalizado: true })
-          .eq('previsao_coleta', dataRef)
-          .eq('placa_veiculo', placaClicada);
-
-        if (error) {
-          mostrarToast('Não foi possível finalizar as coletas.', false);
-          console.error(error);
-          botao.disabled = false;
-          botao.textContent = '✓ Finalizar coletas do dia';
-          return;
-        }
-
-        mostrarToast('Coletas do dia finalizadas.', true);
-        await atualizarResumoDia();
-        await carregarAgendamentos();
-      });
-    });
-  }
-  // ==================================
-
   let mapaEnderecos = {};
 
   async function carregarAgendamentos() {
@@ -1278,7 +1076,6 @@
   filtroStatus.addEventListener('change', carregarAgendamentos);
   document.getElementById('filtro-placa').addEventListener('change', carregarAgendamentos);
   document.getElementById('filtro-data').addEventListener('change', carregarAgendamentos);
-  resumoFiltroData.addEventListener('change', atualizarResumoDia);
 
   document.getElementById('btn-limpar-filtros').addEventListener('click', () => {
     filtroStatus.value = '';
@@ -1290,7 +1087,6 @@
 
   carregarMotoristas().then(() => {
     carregarAgendamentos();
-    atualizarResumoDia();
   });
 </script>
 
