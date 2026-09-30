@@ -428,7 +428,9 @@
       const titulo = chave === 'sem_placa' ? 'Sem motorista atribuído' : chave;
       const motorista = chave !== 'sem_placa' && nomeMotoristaPorPlaca[chave] ? nomeMotoristaPorPlaca[chave] : '';
 
-      const linhasStatus = ORDEM_STATUS.map(s => {
+      const linhasStatus = ORDEM_STATUS
+        .filter(s => g.porStatus[s].clientes !== 0)
+        .map(s => {
         const info = g.porStatus[s];
         return `
           <div class="status-linha status-${s}">
