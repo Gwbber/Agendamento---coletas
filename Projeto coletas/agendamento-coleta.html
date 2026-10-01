@@ -231,6 +231,36 @@
     esconderErro('cnpj');
   });
 
+  function esperar(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  async function buscarCNPJ(cnpjLimpo, tentativa = 1) {
+    const resposta = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpjLimpo}`);
+
+    // A BrasilAPI é gratuita e limita a quantidade de consultas por segundo.
+    // Se vier 429 (limite) ou erro de servidor, espera um pouco e tenta de novo
+    // antes de desistir — comum quando o solicitante testa vários CNPJs seguidos.
+    if ((resposta.status === 429 || resposta.status >= 500) && tentativa < 3) {
+      await esperar(1000 * tentativa);
+      return buscarCNPJ(cnpjLimpo, tentativa + 1);
+    }
+
+    if (resposta.status === 404) {
+      const erro = new Error('CNPJ não encontrado');
+      erro.tipo = 'nao_encontrado';
+      throw erro;
+    }
+
+    if (!resposta.ok) {
+      const erro = new Error('Falha na consulta');
+      erro.tipo = 'indisponivel';
+      throw erro;
+    }
+
+    return resposta.json();
+  }
+
   cnpjInput.addEventListener('blur', async () => {
     const cnpjLimpo = limparCNPJ(cnpjInput.value);
     if (cnpjLimpo.length !== 14) return;
@@ -240,13 +270,15 @@
     nomeEmpresaInput.readOnly = true;
 
     try {
-      const resposta = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpjLimpo}`);
-      if (!resposta.ok) throw new Error('CNPJ não encontrado');
-      const dados = await resposta.json();
+      const dados = await buscarCNPJ(cnpjLimpo);
       nomeEmpresaInput.value = dados.razao_social || '';
       cnpjHint.textContent = 'Empresa encontrada automaticamente.';
     } catch (err) {
-      cnpjHint.textContent = 'Não foi possível buscar automaticamente. Preencha o nome da empresa manualmente.';
+      if (err.tipo === 'nao_encontrado') {
+        cnpjHint.textContent = 'CNPJ não encontrado na Receita Federal. Confira o número ou preencha o nome da empresa manualmente.';
+      } else {
+        cnpjHint.textContent = 'A consulta automática está indisponível no momento (muitas tentativas em sequência ou instabilidade). Preencha o nome da empresa manualmente.';
+      }
       nomeEmpresaInput.readOnly = false;
     }
   });
