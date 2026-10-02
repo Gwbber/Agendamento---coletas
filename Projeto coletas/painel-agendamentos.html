@@ -515,14 +515,14 @@
     filtroPlaca.value = valorAtual;
 
     if (listaMotoristas.length === 0) {
-      listaMotoristasDiv.innerHTML = '<span style="color:rgba(245,243,255,0.5); font-size:14px;">Nenhum motorista cadastrado ainda.</span>';
+      listaMotoristasDiv.innerHTML = '<span style="color:#6b7280; font-size:14px;">Nenhum motorista cadastrado ainda.</span>';
       return;
     }
 
     listaMotoristasDiv.innerHTML = listaMotoristas.map(m => `
-      <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.12); font-size:14px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid #f0f1f3; font-size:14px; color:#1f2328;">
         <span><strong>${m.placa}</strong> — ${m.nome}${m.telefone ? ' · ' + m.telefone : ''}</span>
-        <button class="btn-editar-motorista" data-id="${m.id}" style="border:1px solid rgba(255,255,255,0.25); background:rgba(255,255,255,0.08); color:#f5f3ff; border-radius:6px; padding:4px 10px; font-size:12px; cursor:pointer;">Editar</button>
+        <button class="btn-editar-motorista" data-id="${m.id}" style="border:1px solid #d1d5db; background:#fff; color:#1f2328; border-radius:6px; padding:4px 10px; font-size:12px; cursor:pointer;">Editar</button>
       </div>
     `).join('');
 
