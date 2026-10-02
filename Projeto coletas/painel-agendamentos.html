@@ -528,7 +528,7 @@
 
     listaMotoristasDiv.querySelectorAll('.btn-editar-motorista').forEach(botao => {
       botao.addEventListener('click', () => {
-        const m = listaMotoristas.find(x => x.id === botao.dataset.id);
+        const m = listaMotoristas.find(x => String(x.id) === String(botao.dataset.id));
         if (!m) return;
         motoristaEditandoId = m.id;
         document.getElementById('mot-titulo').textContent = 'Editar motorista';
