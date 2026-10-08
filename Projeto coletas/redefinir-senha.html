@@ -207,6 +207,31 @@
     }
   }, 2500);
 
+  // Traduz o motivo real devolvido pelo Supabase, em vez de uma mensagem genérica
+  function traduzirErroSenha(error) {
+    const codigo = error.code || '';
+    const msg = (error.message || '').toLowerCase();
+
+    if (codigo === 'same_password' || msg.includes('different from the old password')) {
+      return 'A nova senha precisa ser diferente da senha atual.';
+    }
+    if (codigo === 'weak_password' || msg.includes('weak') || msg.includes('should contain')) {
+      const motivos = Array.isArray(error.reasons) ? error.reasons : [];
+      const partes = [];
+      if (motivos.includes('length')) partes.push('use mais caracteres');
+      if (motivos.includes('characters')) partes.push('misture letras maiúsculas, minúsculas, números e símbolos');
+      if (motivos.includes('pwned')) partes.push('essa senha já apareceu em vazamentos conhecidos, escolha outra');
+      return 'Senha muito fraca' + (partes.length ? ': ' + partes.join('; ') : '. Escolha uma senha mais forte') + '.';
+    }
+    if (codigo === 'session_not_found' || codigo === 'session_expired' || msg.includes('session') || msg.includes('not authenticated') || msg.includes('jwt')) {
+      return 'O link expirou ou já foi usado. Volte ao login e peça um novo link.';
+    }
+    if (codigo === 'over_request_rate_limit' || error.status === 429) {
+      return 'Muitas tentativas seguidas. Aguarde um minuto e tente novamente.';
+    }
+    return 'Não foi possível atualizar a senha' + (error.message ? ' (' + error.message + ')' : '') + '.';
+  }
+
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     erroDiv.style.display = 'none';
@@ -240,7 +265,7 @@
     btnSalvar.textContent = 'Salvar nova senha';
 
     if (error) {
-      erroDiv.textContent = 'Não foi possível atualizar a senha. Tente novamente.';
+      erroDiv.textContent = traduzirErroSenha(error);
       erroDiv.style.display = 'block';
       console.error(error);
       return;
