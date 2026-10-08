@@ -768,6 +768,7 @@
   let ordenacaoAtual = { campo: 'previsao_coleta', asc: false };
 
   const CAMPOS_ORDENAVEIS = {
+    _solicitada: 'texto',
     data_coleta: 'texto',
     previsao_coleta: 'texto',
     nome_solicitante: 'texto',
@@ -814,6 +815,18 @@
     if (!dataStr) return '-';
     const [ano, mes, dia] = dataStr.split('-');
     return `${dia}/${mes}/${ano}`;
+  }
+
+  function formatarDataHora(iso) {
+    const d = new Date(iso);
+    if (isNaN(d)) return '-';
+    const partes = new Intl.DateTimeFormat('pt-BR', {
+      timeZone: 'America/Sao_Paulo',
+      day: '2-digit', month: '2-digit', year: '2-digit',
+      hour: '2-digit', minute: '2-digit', hour12: false
+    }).formatToParts(d).reduce((acc, p) => { acc[p.type] = p.value; return acc; }, {});
+    const hora = partes.hour === '24' ? '00' : partes.hour;
+    return `${partes.day}/${partes.month}/${partes.year} ${hora}:${partes.minute}`;
   }
 
   function formatarCNPJ(cnpj) {
@@ -875,6 +888,8 @@
       return;
     }
 
+    // Data/hora em que a solicitação foi feita (created_at); sem ela, cai na data pedida
+    data.forEach(r => { r._solicitada = r.created_at || r.data_coleta; });
     linhasAtuais = data;
     ordenarERenderizar();
   }
@@ -884,6 +899,7 @@
   function estiloLargura(campo) {
     if (larguraColunas[campo]) return `width:${larguraColunas[campo]}px;`;
     if (campo === 'status') return `width:230px;`;
+    if (campo === '_solicitada') return `width:135px;`;
     return '';
   }
 
@@ -906,7 +922,7 @@
       <table>
         <thead>
           <tr>
-            ${rotuloOrdenavel('data_coleta', 'Data solicitada')}
+            ${rotuloOrdenavel('_solicitada', 'Data solicitada')}
             ${rotuloOrdenavel('previsao_coleta', 'Previsão de coleta')}
             ${rotuloOrdenavel('nome_solicitante', 'Solicitante')}
             ${rotuloOrdenavel('cnpj', 'CNPJ')}
@@ -926,7 +942,7 @@
       const previsaoDiferente = row.previsao_coleta && row.previsao_coleta !== row.data_coleta;
       html += `
         <tr class="linha-${row.status}" data-id="${row.id}">
-          <td>${formatarData(row.data_coleta)}</td>
+          <td title="Coleta solicitada para ${formatarData(row.data_coleta)}">${row.created_at ? formatarDataHora(row.created_at) : formatarData(row.data_coleta)}</td>
           <td>
             <input type="date" class="previsao-input${previsaoDiferente ? ' previsao-diferente' : ''}" data-id="${row.id}" value="${row.previsao_coleta || row.data_coleta}">
           </td>
