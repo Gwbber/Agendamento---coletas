@@ -126,6 +126,8 @@
     </div>
   </div>
 
+  <div id="aviso-rotas" style="display:none; margin-bottom:12px; padding:10px 14px; border-radius:10px; font-size:13px; color:#fde68a; background:rgba(253,230,138,0.12); border:1px solid rgba(253,230,138,0.25);"></div>
+
   <div class="table-card">
     <div id="conteudo" class="loading">Carregando...</div>
   </div>
@@ -253,6 +255,19 @@
     document.getElementById('resumo-peso').textContent = peso.toLocaleString('pt-BR') + ' kg';
   }
 
+  // Se a coluna "endereco" ainda não existir no banco, a consulta inteira falharia
+  // e todas as coletas ficariam "sem rota". Por isso tenta de novo sem ela.
+  async function buscarRotas() {
+    let resp = await supabaseClient.from('fornecedores_rota')
+      .select('cnpj, nome_exibicao, regiao, rota, ordem, endereco');
+    if (resp.error) {
+      console.error('Roteirização (com endereço) falhou, tentando sem endereço:', resp.error);
+      resp = await supabaseClient.from('fornecedores_rota')
+        .select('cnpj, nome_exibicao, regiao, rota, ordem');
+    }
+    return resp;
+  }
+
   async function carregarAgendamentos() {
     conteudo.className = 'loading';
     conteudo.textContent = 'Carregando...';
@@ -261,7 +276,7 @@
     // Só somem da lista quando a transportadora finalizar (campo "finalizado"), não pelo status marcado aqui.
     const [{ data, error }, { data: rotas, error: errorRotas }] = await Promise.all([
       supabaseClient.from('agendamentos_coleta').select('*').eq('finalizado', false),
-      supabaseClient.from('fornecedores_rota').select('cnpj, nome_exibicao, regiao, rota, ordem, endereco')
+      buscarRotas()
     ]);
 
     if (error) {
@@ -272,6 +287,13 @@
     }
 
     if (errorRotas) console.error('Erro ao carregar roteirização:', errorRotas);
+    const avisoRotas = document.getElementById('aviso-rotas');
+    if (errorRotas || !rotas || rotas.length === 0) {
+      avisoRotas.textContent = 'A roteirização não está disponível no momento — as coletas aparecem sem rota. Avise a transportadora.';
+      avisoRotas.style.display = 'block';
+    } else {
+      avisoRotas.style.display = 'none';
+    }
 
     // Mapa CNPJ -> dados de rota, para enriquecer e ordenar as coletas
     const mapaRotas = {};
