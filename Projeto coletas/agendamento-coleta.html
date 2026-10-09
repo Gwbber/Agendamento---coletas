@@ -235,49 +235,86 @@
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
-  async function buscarCNPJ(cnpjLimpo, tentativa = 1) {
-    const resposta = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpjLimpo}`);
+  // Fontes públicas e gratuitas que espelham o cadastro da Receita Federal.
+  // Se uma estiver fora do ar, bloqueada ou com limite de consultas, tenta a próxima.
+  const FONTES_CNPJ = [
+    { nome: 'BrasilAPI',     url: c => `https://brasilapi.com.br/api/cnpj/v1/${c}` },
+    { nome: 'Minha Receita', url: c => `https://minhareceita.org/${c}` },
+    { nome: 'CNPJ.ws',       url: c => `https://publica.cnpj.ws/cnpj/${c}` }
+  ];
 
-    // A BrasilAPI é gratuita e limita a quantidade de consultas por segundo.
-    // Se vier 429 (limite) ou erro de servidor, espera um pouco e tenta de novo
-    // antes de desistir — comum quando o solicitante testa vários CNPJs seguidos.
-    if ((resposta.status === 429 || resposta.status >= 500) && tentativa < 3) {
-      await esperar(1000 * tentativa);
-      return buscarCNPJ(cnpjLimpo, tentativa + 1);
+  async function consultarFonte(fonte, cnpjLimpo) {
+    const controle = new AbortController();
+    const limite = setTimeout(() => controle.abort(), 7000);
+    try {
+      const resposta = await fetch(fonte.url(cnpjLimpo), { signal: controle.signal });
+      if (resposta.status === 404) return { estado: 'nao_encontrado' };
+      if (!resposta.ok) return { estado: 'falha', detalhe: `HTTP ${resposta.status}` };
+      const dados = await resposta.json();
+      const nome = dados.razao_social || dados.nome || '';
+      if (!nome) return { estado: 'falha', detalhe: 'resposta sem razão social' };
+      return { estado: 'ok', nome };
+    } catch (e) {
+      return { estado: 'falha', detalhe: e.name === 'AbortError' ? 'tempo esgotado' : 'falha de rede/bloqueio' };
+    } finally {
+      clearTimeout(limite);
     }
-
-    if (resposta.status === 404) {
-      const erro = new Error('CNPJ não encontrado');
-      erro.tipo = 'nao_encontrado';
-      throw erro;
-    }
-
-    if (!resposta.ok) {
-      const erro = new Error('Falha na consulta');
-      erro.tipo = 'indisponivel';
-      throw erro;
-    }
-
-    return resposta.json();
   }
+
+  // Retorna { nome } ou lança erro com .tipo = 'nao_encontrado' | 'indisponivel'
+  async function buscarCNPJ(cnpjLimpo) {
+    for (let rodada = 1; rodada <= 2; rodada++) {
+      const falhas = [];
+      let algumNaoEncontrado = false;
+
+      for (const fonte of FONTES_CNPJ) {
+        const r = await consultarFonte(fonte, cnpjLimpo);
+        if (r.estado === 'ok') return { nome: r.nome };
+        // Um 404 isolado pode ser base desatualizada (empresa recém-aberta); segue para a próxima fonte
+        if (r.estado === 'nao_encontrado') algumNaoEncontrado = true;
+        else falhas.push(`${fonte.nome}: ${r.detalhe}`);
+      }
+
+      if (algumNaoEncontrado) {
+        const erro = new Error('CNPJ não encontrado');
+        erro.tipo = 'nao_encontrado';
+        throw erro;
+      }
+
+      console.warn('Consulta de CNPJ falhou em todas as fontes:', falhas);
+      if (rodada === 2) {
+        const erro = new Error('Fontes indisponíveis');
+        erro.tipo = 'indisponivel';
+        erro.detalhes = falhas.join(' · ');
+        throw erro;
+      }
+      await esperar(1500); // uma segunda rodada, caso fosse só um limite momentâneo
+    }
+  }
+
+  let ultimaConsultaCNPJ = 0;
 
   cnpjInput.addEventListener('blur', async () => {
     const cnpjLimpo = limparCNPJ(cnpjInput.value);
     if (cnpjLimpo.length !== 14) return;
 
+    const minhaConsulta = ++ultimaConsultaCNPJ;
     cnpjHint.textContent = 'Buscando empresa...';
     nomeEmpresaInput.value = '';
     nomeEmpresaInput.readOnly = true;
 
     try {
-      const dados = await buscarCNPJ(cnpjLimpo);
-      nomeEmpresaInput.value = dados.razao_social || '';
+      const { nome } = await buscarCNPJ(cnpjLimpo);
+      if (minhaConsulta !== ultimaConsultaCNPJ) return; // o CNPJ foi trocado enquanto buscava
+      nomeEmpresaInput.value = nome;
       cnpjHint.textContent = 'Empresa encontrada automaticamente.';
     } catch (err) {
+      if (minhaConsulta !== ultimaConsultaCNPJ) return;
       if (err.tipo === 'nao_encontrado') {
         cnpjHint.textContent = 'CNPJ não encontrado na Receita Federal. Confira o número ou preencha o nome da empresa manualmente.';
       } else {
-        cnpjHint.textContent = 'A consulta automática está indisponível no momento (muitas tentativas em sequência ou instabilidade). Preencha o nome da empresa manualmente.';
+        cnpjHint.textContent = 'A consulta automática está indisponível no momento. Preencha o nome da empresa manualmente.'
+          + (err.detalhes ? ` (${err.detalhes})` : '');
       }
       nomeEmpresaInput.readOnly = false;
     }
